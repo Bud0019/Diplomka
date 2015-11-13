@@ -1,0 +1,33 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeFile="Main_MasterPage.master.cs" Inherits="Main_MasterPage" %>
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>MainPage</title>
+    <asp:ContentPlaceHolder ID="head" runat="server">
+    </asp:ContentPlaceHolder>
+    <link href="App_Themes/Style/StyleSheet.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <form id="form1" runat="server">
+        <div id="mainDiv">
+            <div id="headerDiv">
+                <h1 class="title">Distribuovaný systém smerovania pre Asterisk
+                </h1>
+                <h2 class="title2">Prihlásenie
+                </h2>
+            </div>
+            <div id="contentDiv">
+                <div id="actionDiv">
+                    <asp:ContentPlaceHolder ID="MainContentPlaceHolder" runat="server">
+                    </asp:ContentPlaceHolder>
+                </div>
+            </div>
+            <div id="footerDiv">
+                <h5>©2015 Jakub Budos</h5>
+            </div>
+        </div>
+    </form>
+</body>
+</html>

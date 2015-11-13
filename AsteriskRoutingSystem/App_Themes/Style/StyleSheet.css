@@ -1,0 +1,156 @@
+﻿/*general*/
+body {
+    margin: 0pt;
+}
+
+#mainDiv {
+    width: auto;
+    height: auto;
+    margin: 0pt;
+}
+
+#headerDiv {
+    background-color: cornflowerblue;
+    margin: 0pt;
+    height: 70pt;
+}
+
+#footerDiv {
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-top-color: cornflowerblue;
+    width: auto;
+    text-align: center;
+}
+
+#contentDiv {
+    height: 360pt;
+}
+
+#actionDiv {
+    position: relative;
+    top: 50pt;
+    width: auto;
+    height: auto;
+}
+
+/*User_MasterPage*/
+#menuDiv {
+    border-bottom: solid;
+    border-bottom-color: cornflowerblue;
+    border-bottom-width: 1px;
+}
+
+.title {
+    padding-top: 15pt;
+    font-family: 'Times New Roman', Times, serif;
+    color: white;
+    margin: 0px;
+    padding-left: 10pt;
+}
+
+#logoAsterisk {
+    width: 150pt;
+    height: 70pt;
+    float: left;
+    margin-right: 30pt;
+}
+
+#LoginStatus_status {
+    float: right;
+    padding-right: 20pt;
+    margin-left: 10pt;
+}
+
+#LinkButton_account {
+    float: right;
+}
+
+#LoginName_name {
+    position: absolute;
+    right: 30pt;
+    top: 55pt;
+}
+
+#LinkButton_Asterisks {
+    padding-right: 1em;
+    padding-left: 1em;
+    border-right: solid;
+    border-right-color: grey;
+    border-right-width: 1px;
+}
+
+#LinkButton_Trunks {
+    padding-right: 1em;
+    padding-left: 1em;
+}
+
+#LinkButton_Home {
+    padding-right: 1em;
+    padding-left: 1em;
+    border-right: solid;
+    border-right-color: grey;
+    border-right-width: 1px;
+}
+
+#AsteriskManagmentDiv {
+    float: left;
+    padding-right: 1em;
+    padding-left:2em;
+    width: auto;
+    margin-right: 1em;
+    border-right-width: 1px;
+    height:auto;
+    border-right-style: dotted;
+    border-right-color: inherit;
+}
+
+#listOfAsteriskDiv {
+    float: left;
+    padding-right: 1em;
+    width: auto;
+    margin-right: 1em;
+    border-right: dotted;
+    border-right-width: 1px;
+    height: auto;
+}
+
+#trunksDiv {
+    float: left;
+    padding-right: 1em;
+    width: auto;
+    margin-right: 1em;
+    border-right: dotted;
+    border-right-width: 1px;
+    height: auto;
+}
+
+#manageTrunkDiv {
+    float: left;
+    width: auto;
+    height: auto;
+}
+
+h5 {
+    margin: 0px;
+    color: gainsboro;
+}
+
+#manageAsteriskDiv{
+    width:320pt;
+    float:left;
+    
+}
+#logDiv{
+    float:left;
+    width:260pt;
+    height: 286px;
+}
+
+/*Main_MasterPage*/
+.title2 {
+    font-family: 'Times New Roman', Times, serif;
+    color: white;
+    margin: 0px;
+    padding-left: 10pt;
+}

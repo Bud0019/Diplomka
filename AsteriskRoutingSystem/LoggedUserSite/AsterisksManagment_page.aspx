@@ -81,7 +81,7 @@
         
     <asp:Button ID="Button_confirm" runat="server" Text="Pridať" ValidationGroup="vg_addAsterisk" OnClick="Button_confirm_Click" />
        
-        <asp:Button ID="Button_edit" runat="server" Text="Upraviť" ValidationGroup="vg_addAsterisk" Visible="False" />
+        <asp:Button ID="Button_edit" runat="server" Text="Upraviť" ValidationGroup="vg_addAsterisk" Visible="False" OnClick="Button_edit_Click" />
        
     <asp:Button ID="Button_delete" runat="server" OnClick="Button_delete_Click" Text="Zmazať" Visible="False" />
        

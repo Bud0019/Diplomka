@@ -234,6 +234,16 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         closeEdit();
     }
 
+    protected void button_clear_Click(object sender, EventArgs e)
+    {
+        TextBox_log.Text = string.Empty;
+    }
+
+    protected void Button_edit_Click(object sender, EventArgs e)
+    {
+
+    }
+
     private void closeEdit()
     {
         GridView_Asterisks.SelectedIndex = -1;
@@ -290,10 +300,5 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
             }
         }
         return cipherText;
-    }
-
-    protected void button_clear_Click(object sender, EventArgs e)
-    {
-        TextBox_log.Text = string.Empty;
     }
 }

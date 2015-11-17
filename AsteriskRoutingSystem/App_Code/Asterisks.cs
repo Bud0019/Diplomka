@@ -55,8 +55,16 @@ namespace AsteriskRoutingSystem
                 updateCmd.Parameters.AddWithValue("@login_AMI", asterisk.login_AMI);
                 updateCmd.Parameters.AddWithValue("@password_AMI", asterisk.password_AMI);
                 connection.Open();
-                int returnCode = (int)updateCmd.ExecuteScalar();
-                return returnCode;
+                string returnCode = (string)updateCmd.ExecuteScalar();
+                           
+                    if (returnCode.Contains(asterisk.name_Asterisk))
+                        return 1;
+                    else if (returnCode.Contains(asterisk.ip_address))
+                        return 2;
+                    else if (returnCode.Contains(asterisk.prefix_Asterisk))
+                        return 3;                           
+                    else
+                        return -1;
             };
         }
 

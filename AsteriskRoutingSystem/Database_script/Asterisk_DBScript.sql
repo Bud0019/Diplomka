@@ -4,9 +4,9 @@ use Asterisk_DB;
 
 create table Asterisks(
 id_Asterisk int primary key identity,
-name_Asterisk nvarchar(20) not null,
-prefix_Asterisk nvarchar(10) not null,
-ip_address nvarchar(50) not null,
+name_Asterisk nvarchar(20) not null unique,
+prefix_Asterisk nvarchar(10) not null unique,
+ip_address nvarchar(50) not null unique,
 login_AMI nvarchar(20) not null,
 password_AMI nvarchar(256) not null,
 asterisk_owner uniqueidentifier foreign key references dbo.aspnet_Users(UserId),
@@ -63,40 +63,19 @@ alter proc updateAsterisk
 @login_AMI nvarchar(20),
 @password_AMI nvarchar(256)
 as
-Begin
-	declare @countName int
-	declare @countIP int
-	declare @countPrefix int
-
-	Select @countName = COUNT(name_Asterisk) from Asterisks
-	where [name_Asterisk] = @name_asterisk
-
-	Select @countIP = COUNT(ip_address) from Asterisks
-	where [ip_address] = @ip_address
-
-	Select @countPrefix = COUNT(prefix_Asterisk)from Asterisks
-	where [prefix_Asterisk] = @prefix_asterisk
-
-	if(@countName > 1)
-	begin
-		select 1 as ReturnCode
-	end
-	else if(@countIP > 1)
-		begin
-			select 2 as ReturnCode
-		end
-	else if(@countPrefix > 1)
-		begin
-			select 3 as ReturnCode
-		end
-	else
-	begin	
+Begin	
+	begin try
 		UPDATE Asterisks 
 		SET name_Asterisk = @name_asterisk, prefix_Asterisk = @prefix_Asterisk, ip_address = @ip_address, login_AMI = @login_AMI, password_AMI = @password_AMI
 		WHERE id_Asterisk = @id_Asterisk 
-		select -1 as ReturnCode
-	end
+		select 'OK' as ReturnCode
+	end try
+	begin catch
+		select ERROR_MESSAGE() as ReturnCode
+	end catch
 End
+
+
 
 alter proc insertUniqueTrunkByAsterisk
 @trunk_name nvarchar(30),
@@ -159,7 +138,11 @@ drop table Trunks
 delete from dbo.aspnet_Users
 delete from dbo.aspnet_Membership
 
-select * from Trunks
+select count(name_Asterisk) from Asterisks where name_Asterisk = 'asterisk214'
+
+update Asterisks
+set prefix_Asterisk = '1'
+where id_Asterisk = 4
 
 select COUNT(name_Asterisk), COUNT(ip_address), COUNT(prefix_Asterisk) from Asterisks where name_Asterisk = 'asterisk214' or ip_address = '158.196.244.214' or prefix_Asterisk = '1'
 
@@ -169,4 +152,6 @@ values('trunk1', '1.1.1.1','context','1')
 select * from Asterisks where asterisk_owner = (select UserId from dbo.aspnet_Users where UserName = 'bud0019')
 
 INSERT INTO Asterisks(name_Asterisk, prefix_Asterisk, ip_address, login_AMI, password_AMI, asterisk_owner)
-                    values('asterisk214', '1', '158.196.244.214', 'asterisk214', 'asterisk214', (SELECT UserId FROM dbo.aspnet_Users WHERE UserName = 'bud0019'))
+                    values('asterisk223', '2', '158.196.244.223', 'asterisk214', 'asterisk214', (SELECT UserId FROM dbo.aspnet_Users WHERE UserName = 'bud0019'))
+SELECT * FROM sys.messages
+WHERE text like '%duplicate%' and text like '%key%' and language_id = 1033

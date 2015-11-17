@@ -93,11 +93,11 @@ public class TCPConnector
         return sendRequest(str_delTrunk);
     }
 
-    public bool updateTrunk(string oldTrunkName, string newTrunkName, string hostIP, string contextName)
+    public bool updateTrunk(string oldTrunkName, string newTrunkName, string hostIP)
     {
-        string str_updateTrunk = String.Format("Action: UpdateConfig\r\nReload: yes\r\nsrcfilename: sip.conf\r\ndstfilename: sip.conf\r\n" +
-            "Action-000000: renamecat\r\nCat-000000: {0}\r\nValue-000000: {1}\r\nAction-000001: update\r\nCat-000001: {1}\r\nVar-000001: host\r\nValue-000001: {2}\r\n" +
-            "Action-000002: update\r\nCat-000002: {1}\r\nVar-000002: context\r\nValue-000002: {3}\r\n\r\n", oldTrunkName, newTrunkName, hostIP, contextName);
+        string str_updateTrunk = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: sip.conf\r\ndstfilename: sip.conf\r\n" +
+            "Action-000000: renamecat\r\nCat-000000: {0}\r\nValue-000000: {1}\r\nAction-000001: update\r\nCat-000001: {1}\r\nVar-000001: host\r\nValue-000001: {2}\r\n\r\n",
+            oldTrunkName, newTrunkName, hostIP);
         return sendRequest(str_updateTrunk);
     }
 }

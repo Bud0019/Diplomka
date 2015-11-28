@@ -17,8 +17,8 @@ public class TCPConnector
     public bool connect(string ipAddress)
     {
         try
-        {
-            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        {            
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);            
             IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), PORT);
             clientSocket.Connect(serverEndPoint);
             return true;
@@ -35,14 +35,15 @@ public class TCPConnector
     }
 
     private bool sendRequest(string message)
-    {
-        clientSocket.Send(Encoding.ASCII.GetBytes(message));       
+    {       
+        
+        clientSocket.Send(Encoding.ASCII.GetBytes(message));
         int bytesRead = 0;
 
         do
         {
-            byte[] buffer = new byte[clientSocket.SendBufferSize];
-            bytesRead = clientSocket.Receive(buffer);
+            byte[] buffer = new byte[clientSocket.ReceiveBufferSize];
+            bytesRead = clientSocket.Receive(buffer);           
             string response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
             if (Regex.Match(response, "Response: Success", RegexOptions.IgnoreCase).Success)
@@ -100,4 +101,30 @@ public class TCPConnector
             oldTrunkName, newTrunkName, hostIP);
         return sendRequest(str_updateTrunk);
     }
+
+    public void getDialPlanContexts()
+    {
+        List<string> dialPlanContextsList = new List<string>();
+        string str_getDialPlanContexts = "Action: ListCategories\r\nFilename: extensions.conf\r\nActionID: 2\r\n\r\n";
+        clientSocket.Send(Encoding.ASCII.GetBytes(str_getDialPlanContexts));
+        int bytesRead = 0;
+        string[] subStrings;
+        do
+        {
+            byte[] buffer = new byte[clientSocket.ReceiveBufferSize];
+            bytesRead = clientSocket.Receive(buffer);
+            string response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
+            if (Regex.Match(response, "Response: Success", RegexOptions.IgnoreCase).Success)
+            {
+                response = response.Substring(response.IndexOf("Response"));
+                subStrings = response.Split(':');
+            }
+            else if (Regex.Match(response, "Response: Error", RegexOptions.IgnoreCase).Success)
+            {
+                
+            }
+
+        } while (bytesRead != 0);
+    }
 }
+

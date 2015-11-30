@@ -70,14 +70,15 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                             TextBox_log.Text += "Pridávam k " + asterisk.name_Asterisk + "...\n";
                             foreach (Asterisk oneAsterisk in asteriskList)
                             {
-                                if (tcp.addTrunk(oneAsterisk.name_Asterisk, oneAsterisk.ip_address))
+                                if (tcp.addTrunk(oneAsterisk.name_Asterisk, oneAsterisk.ip_address)) {
+                                   tcp.addPrefix(oneAsterisk.name_Asterisk, oneAsterisk.prefix_Asterisk);
                                     TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " OK.\n";
+                                }
                                 else
                                     TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " zlyhalo!\n";
                                 //osetrit co v takom pripade 
                             }
-                            tcp.reloadModules();
-                           
+                            tcp.reloadModules();                          
                             tcp.logout();
                             tcp.disconnect();
                             foreach (Asterisk oneAsterisk in asteriskList)
@@ -89,6 +90,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                     {
                                         if (tcp.addTrunk(TextBox_name.Text, TextBox_ipAddress.Text))
                                         {
+                                            tcp.addPrefix(TextBox_name.Text, TextBox_prefix.Text);
                                             TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
                                         }
                                         else
@@ -115,7 +117,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         }
                         else
                         {
-                            tcp.getDialPlanContexts();
+                                                                                 
                             TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
                         }                       
                         GridView_Asterisks.DataBind();

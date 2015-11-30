@@ -107,11 +107,11 @@ namespace AsteriskRoutingSystem
                 asterisk.id_Asterisk = int.Parse(item["id_Asterisk"].ToString());
                 asterisk.name_Asterisk = item["name_Asterisk"].ToString();
                 asterisk.ip_address = item["ip_address"].ToString();
-                asterisk.prefix_Asterisk = item["prefix_Asterisk"].ToString();             
+                asterisk.prefix_Asterisk = item["prefix_Asterisk"].ToString();
                 asterisk.login_AMI = item["login_AMI"].ToString();
                 asterisk.password_AMI = item["password_AMI"].ToString();
                 list.Add(asterisk);
-            }          
+            }
             return list;
         }
     }

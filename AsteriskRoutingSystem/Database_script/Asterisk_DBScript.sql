@@ -130,7 +130,7 @@ End
 
 
 select * from dbo.aspnet_Users 
-select * from Asterisks
+select * from Asterisks where id_Asterisk != 39
 delete from Asterisks
 delete from Trunks
 drop table Asterisks

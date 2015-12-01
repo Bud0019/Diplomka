@@ -62,6 +62,11 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                    
                     AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
                     List<Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
+                    List<string> asteriskNamesList = new List<string>();
+                    foreach(Asterisk asteriskName in asteriskList)
+                    {
+                        asteriskNamesList.Add(asteriskName.name_Asterisk);
+                    }
                     int returnCode;
                     if ((returnCode = asteriskAccessLayer.insertNewUniqueASterisk(asterisk)) == -1)
                     {                       
@@ -78,9 +83,11 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                     TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " zlyhalo!\n";
                                 //osetrit co v takom pripade 
                             }
+                            
+                            tcp.createInitialContexts(asteriskNamesList, tcp.getDialPlanContexts());                          
                             tcp.reloadModules();                          
                             tcp.logout();
-                            tcp.disconnect();
+                            tcp.disconnect();                            
                             foreach (Asterisk oneAsterisk in asteriskList)
                             {
                                 TextBox_log.Text += "Pridávam k " + oneAsterisk.name_Asterisk + "...\n";
@@ -109,7 +116,8 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                 {
                                     TextBox_log.Text += "Asterisk" + oneAsterisk.name_Asterisk + " je nedostupný!\n";
                                     //osetrit co v takom pripade 
-                                }                               
+                                }
+                                tcp.insertOneInclude(TextBox_name.Text);
                                 tcp.reloadModules();
                                 tcp.logout();
                                 tcp.disconnect();
@@ -117,9 +125,9 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         }
                         else
                         {
-                                                                                 
+                            tcp.createInitialContexts(asteriskNamesList, tcp.getDialPlanContexts());                            
                             TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
-                        }                       
+                        }                                              
                         GridView_Asterisks.DataBind();
                     }
                     else if (returnCode == 1)

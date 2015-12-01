@@ -103,50 +103,60 @@ public class TCPConnector
     }
 
     public bool addPrefix(string trunkName, string prefix)
-    {
-        string tmp = createPrefix(prefix);
+    {        
         string str_addToDialPlan = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
                     "Action-000000: newcat\r\nCat-000000: {0}\r\nAction-000001: append\r\nCat-000001: {0}\r\nVar-000001: exten\r\n"+
-                    "Value-000001:>_"+ tmp + ",1,NoOp()\r\nAction-000002: append\r\nCat-000002: {0}\r\nVar-000002: exten\r\n" +
-                    "Value-000002:>_" + tmp + ",n,Dial(SIP/${{EXTEN}}@{0})\r\nAction-000003: append\r\nCat-000003: {0}\r\nVar-000003: exten\r\n" +
-                    "Value-000003:>_" + tmp + ",n,HangUp()\r\n\r\n", trunkName);
+                    "Value-000001:>_{1},1,NoOp()\r\nAction-000002: append\r\nCat-000002: {0}\r\nVar-000002: exten\r\n" +
+                    "Value-000002:>_{1},n,Dial(SIP/${{EXTEN}}@{0})\r\nAction-000003: append\r\nCat-000003: {0}\r\nVar-000003: exten\r\n" +
+                    "Value-000003:>_{1},n,HangUp()\r\n\r\n", trunkName, createPrefix(prefix));
         return sendRequest(str_addToDialPlan);
     }
 
-    public void createContexts()
-    {
-        List<string> dialPlanContextsList = getDialPlanContexts();
-        if (dialPlanContextsList.Contains("remote"))
-        {
-            string str_addRemoteContext = "Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf" +
-                    "Action-000000: newcat\r\nCat-000000: remote\r\n";
+    public void createInitialContexts(List<string> asteriskNamesList, List<string> dialPlanContextsList)
+    {          
+        string str_addRemoteContext = "Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                    "Action-000000: newcat\r\nCat-000000: remote\r\n\r\n";
             sendRequest(str_addRemoteContext);
-            foreach (string str in dialPlanContextsList)
+
+        foreach (string context in dialPlanContextsList)
+        {
+            string str_addToRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", context);
+            sendRequest(str_addToRemoteContext);
+            if (!asteriskNamesList.Contains(context))
             {
-                string str_addToContexts = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf" +
-                    "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>" + str + "\r\n"+
-                    "Action-000001: append\r\nCat-000001: "+str+"\r\nVar-000001: include\r\nValue-000001: >remote\r\n\r\n");
-                sendRequest(str_addToContexts);                   
+                string str_addToInternalContexts = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                "Action-000000: append\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000:>remote\r\n\r\n", context);
+                sendRequest(str_addToInternalContexts);
             }
         }
-        else if(!dialPlanContextsList.Contains("remote"))
-        {
-            
-        }/*
-        else if(getDialPlanContexts().Count == 0)
-        {
-            return false;
-        }*/
     }
 
+    public bool insertOneInclude(string context)
+    {
+        string str_addToRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+               "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", context);
+        return sendRequest(str_addToRemoteContext);
+    }
+    /*
+    public bool deleteAllRemoteContexts()
+    {
 
+    }
+
+    public bool deleteContexts()
+    {
+        List<string> dialPlanContextsList = getDialPlanContexts();
+
+    }
+    */
     private string createPrefix(string prefix)
     {
         string tmpStr = "XXXXXXXXX";
         return prefix + tmpStr.Substring(prefix.Length);                       
     }
 
-    private List<string> getDialPlanContexts()
+    public List<string> getDialPlanContexts()
     {
         List<string> tmpDialPlanContextsList = new List<string>();
         List<string> finalDialPlanContextsList = new List<string>();
@@ -154,6 +164,7 @@ public class TCPConnector
         clientSocket.Send(Encoding.ASCII.GetBytes(str_getDialPlanContexts));
         int bytesRead = 0;
         string[] subStrings;
+        Thread.Sleep(200);
         do
         {
             byte[] buffer = new byte[clientSocket.ReceiveBufferSize];
@@ -165,9 +176,9 @@ public class TCPConnector
                 subStrings = response.Split(':');
                 tmpDialPlanContextsList = subStrings.OfType<string>().ToList();
                 tmpDialPlanContextsList.RemoveRange(0, 3);              
-                foreach(string str in tmpDialPlanContextsList)
+                foreach(string context in tmpDialPlanContextsList)
                 {
-                   finalDialPlanContextsList.Add(str.Substring(0, str.IndexOf("\r")).Trim());                  
+                   finalDialPlanContextsList.Add(context.Substring(0, context.IndexOf("\r")).Trim());                  
                 }
                 return finalDialPlanContextsList;
                 

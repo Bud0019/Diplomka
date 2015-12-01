@@ -83,7 +83,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                     TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " zlyhalo!\n";
                                 //osetrit co v takom pripade 
                             }
-                            
+                                                        
                             tcp.createInitialContexts(asteriskNamesList, tcp.getDialPlanContexts());                          
                             tcp.reloadModules();                          
                             tcp.logout();
@@ -116,7 +116,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                 {
                                     TextBox_log.Text += "Asterisk" + oneAsterisk.name_Asterisk + " je nedostupný!\n";
                                     //osetrit co v takom pripade 
-                                }
+                                }                            
                                 tcp.insertOneInclude(TextBox_name.Text);
                                 tcp.reloadModules();
                                 tcp.logout();

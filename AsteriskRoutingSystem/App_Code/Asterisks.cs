@@ -19,12 +19,6 @@ namespace AsteriskRoutingSystem
         public string asterisk_owner { get; set; }
     }
 
-    public class Context
-    {
-        public int id_Asterisk { get; set; }
-        public string context_Name { get; set; }
-    }
-
     public class AsteriskAccessLayer
     {
         private string CS = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;

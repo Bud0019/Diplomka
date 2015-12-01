@@ -12,12 +12,6 @@ password_AMI nvarchar(256) not null,
 asterisk_owner uniqueidentifier foreign key references dbo.aspnet_Users(UserId),
 )
 
-create table Contexts(
-name_Asterisk nvarchar(50) not null,
-context_Name nvarchar(50) not null
-)
-
-
 alter proc insertUniqueAsterisk
 @name_asterisk nvarchar(20),
 @prefix_Asterisk nvarchar(10),
@@ -134,16 +128,13 @@ Begin
 End
 
 
-select * from Contexts
+
 select * from Asterisks where id_Asterisk != 39
 delete from Asterisks
-delete from Contexts
 delete from Trunks
 drop table Asterisks
-drop table Contexts
 delete from dbo.aspnet_Users
 delete from dbo.aspnet_Membership
-
 select count(name_Asterisk) from Asterisks where name_Asterisk = 'asterisk214'
 
 update Asterisks

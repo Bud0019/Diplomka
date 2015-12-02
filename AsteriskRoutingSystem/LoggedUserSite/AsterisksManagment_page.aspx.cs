@@ -84,7 +84,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                 //osetrit co v takom pripade 
                             }
                                                         
-                            tcp.createInitialContexts(asteriskNamesList, tcp.getDialPlanContexts());                          
+                            tcp.createInitialContexts(asteriskNamesList);                          
                             tcp.reloadModules();                          
                             tcp.logout();
                             tcp.disconnect();                            
@@ -116,8 +116,9 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                 {
                                     TextBox_log.Text += "Asterisk" + oneAsterisk.name_Asterisk + " je nedostupný!\n";
                                     //osetrit co v takom pripade 
-                                }                            
-                                tcp.insertOneInclude(TextBox_name.Text);
+                                }
+                                asteriskNamesList.Add(TextBox_name.Text);
+                                tcp.updateAsterisksDialPlans(asteriskNamesList);
                                 tcp.reloadModules();
                                 tcp.logout();
                                 tcp.disconnect();
@@ -125,7 +126,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         }
                         else
                         {
-                            tcp.createInitialContexts(asteriskNamesList, tcp.getDialPlanContexts());                            
+                            tcp.createInitialContexts(asteriskNamesList);                            
                             TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
                         }                                              
                         GridView_Asterisks.DataBind();
@@ -162,6 +163,11 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         TCPConnector tcp = new TCPConnector();
         AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
         List<Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
+        List<string> asteriskNamesList = new List<string>();
+        foreach (Asterisk asteriskName in asteriskList)
+        {
+            asteriskNamesList.Add(asteriskName.name_Asterisk);
+        }
         StringBuilder sbDeletedAsterisk = new StringBuilder();
         StringBuilder sbRemoteAsterisk = new StringBuilder();
         foreach (Asterisk asterisk in asteriskList)
@@ -192,6 +198,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                     sbDeletedAsterisk.Append("Vymazanie: " + otherasterisk.name_Asterisk + " zlyhalo!\n");
                             }
                         }
+                        tcp.deleteAllRemoteContexts(asteriskNamesList);
                         tcp.reloadModules();
                         tcp.logout();
                         tcp.disconnect();
@@ -223,6 +230,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         else
                             //to do co v takom pripade 
                             sbRemoteAsterisk.Append("Vymazanie: " + GridView_Asterisks.SelectedRow.Cells[1].Text + " zlyhalo!\n");
+                        tcp.deleteOneContext(TextBox_name.Text);
                         tcp.reloadModules();
                         tcp.logout();
                         tcp.disconnect();

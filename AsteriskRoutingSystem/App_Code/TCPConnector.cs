@@ -112,44 +112,97 @@ public class TCPConnector
         return sendRequest(str_addToDialPlan);
     }
 
-    public void createInitialContexts(List<string> asteriskNamesList, List<string> dialPlanContextsList)
-    {          
+    public void createInitialContexts(List<string> asteriskNamesList)
+    {
+        List<string> dialPlanContextsList = getDialPlanContexts();
         string str_addRemoteContext = "Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
                     "Action-000000: newcat\r\nCat-000000: remote\r\n\r\n";
-            sendRequest(str_addRemoteContext);
+        sendRequest(str_addRemoteContext);
 
         foreach (string context in dialPlanContextsList)
         {
+            string pureContextName = context.Substring(8, (context.IndexOf("\r")-8));
             string str_addToRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", context);
+                "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", pureContextName);
             sendRequest(str_addToRemoteContext);
-            if (!asteriskNamesList.Contains(context))
+            if (!asteriskNamesList.Contains(pureContextName))
             {
                 string str_addToInternalContexts = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                "Action-000000: append\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000:>remote\r\n\r\n", context);
+                "Action-000000: append\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000:>remote\r\n\r\n", pureContextName);
                 sendRequest(str_addToInternalContexts);
             }
         }
     }
 
-    public bool insertOneInclude(string context)
-    {
-        string str_addToRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-               "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", context);
-        return sendRequest(str_addToRemoteContext);
-    }
-    /*
-    public bool deleteAllRemoteContexts()
-    {
-
-    }
-
-    public bool deleteContexts()
+    public void updateAsterisksDialPlans(List<string> asteriskNamesList)
     {
         List<string> dialPlanContextsList = getDialPlanContexts();
-
+        string remoteIncludes = null;
+        foreach (string context in dialPlanContextsList)
+        {
+            if (Regex.Match(context, ": remote", RegexOptions.IgnoreCase).Success)
+            {
+                remoteIncludes = context;
+                break;
+            }
+        }
+        foreach (string context in dialPlanContextsList)
+        {
+            string pureContextName = context.Substring(8, (context.IndexOf("\r") - 8));
+            if (!pureContextName.Equals("remote"))
+            {
+                if (!Regex.Match(remoteIncludes, "include=" + pureContextName, RegexOptions.IgnoreCase).Success)
+                {
+                    string str_addToRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                   "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", pureContextName);
+                    sendRequest(str_addToRemoteContext);
+                }
+                if (!asteriskNamesList.Contains(pureContextName))
+                {
+                    if (!Regex.Match(context, "include=remote", RegexOptions.IgnoreCase).Success)
+                    {
+                        string str_addToInternalContexts = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                            "Action-000000: append\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000:>remote\r\n\r\n", pureContextName);
+                        sendRequest(str_addToInternalContexts);
+                    }
+                }
+            }
+        }
     }
-    */
+
+    public void deleteAllRemoteContexts(List<string>asteriskNamesList)
+    {        
+        string str_deleteRemoteContext = "Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                    "Action-000000: delcat\r\nCat-000000: remote\r\n\r\n";
+        sendRequest(str_deleteRemoteContext);
+        List<string> dialPlanContextsList = getDialPlanContexts();
+        
+        foreach (string context in dialPlanContextsList)
+        {
+            string pureContextName = context.Substring(8, (context.IndexOf("\r") - 8));
+            if (asteriskNamesList.Contains(pureContextName))
+            {
+                string str_deleteAsterisksContexts = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                    "Action-000000: delcat\r\nCat-000000: {0}\r\n\r\n", pureContextName);
+                sendRequest(str_deleteAsterisksContexts);
+            }
+            else
+            {                
+                string str_deleteIncludeRemote = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                    "Action-000000: delete\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000: remote\r\nMatch-000000: remote\r\n\r\n", pureContextName);
+                sendRequest(str_deleteIncludeRemote);
+            }
+        }
+    }
+    
+    public void deleteOneContext(string deletedContext)
+    {
+        string str_deleteRemovedContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                    "Action-000000: delcat\r\nCat-000000: {0}\r\nAction-000001: delete\r\nCat-000001: remote\r\nVar-000001: include\r\nValue-000001: {0}\r\n"+
+                    "Match-000001: {0}\r\n\r\n", deletedContext);
+        sendRequest(str_deleteRemovedContext);
+    }
+    
     private string createPrefix(string prefix)
     {
         string tmpStr = "XXXXXXXXX";
@@ -160,7 +213,8 @@ public class TCPConnector
     {
         List<string> tmpDialPlanContextsList = new List<string>();
         List<string> finalDialPlanContextsList = new List<string>();
-        string str_getDialPlanContexts = "Action: ListCategories\r\nFilename: extensions.conf\r\nActionID: 2\r\n\r\n";
+        string str_getDialPlanContexts = "Action: GetConfig\r\nSynopsis: Retrieve configuration\r\nPrivilege: config,all\r\nDescription: test\r\n"+
+            "Variables: \r\nFilename: extensions.conf\r\n\r\n";
         clientSocket.Send(Encoding.ASCII.GetBytes(str_getDialPlanContexts));
         int bytesRead = 0;
         string[] subStrings;
@@ -172,13 +226,13 @@ public class TCPConnector
             string response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             response = response.Substring(response.IndexOf("Response"));
             if (Regex.Match(response, "Response: Success", RegexOptions.IgnoreCase).Success)
-            {               
-                subStrings = response.Split(':');
+            {                              
+                subStrings = response.Split(new string[] { "Category-" }, StringSplitOptions.None);
                 tmpDialPlanContextsList = subStrings.OfType<string>().ToList();
-                tmpDialPlanContextsList.RemoveRange(0, 3);              
+                tmpDialPlanContextsList.RemoveAt(0);              
                 foreach(string context in tmpDialPlanContextsList)
                 {
-                   finalDialPlanContextsList.Add(context.Substring(0, context.IndexOf("\r")).Trim());                  
+                   finalDialPlanContextsList.Add(context);                  
                 }
                 return finalDialPlanContextsList;
                 
@@ -189,6 +243,7 @@ public class TCPConnector
             }
         } while (bytesRead != 0);
         return finalDialPlanContextsList;
-    }
+    }   
 }
+
 

@@ -102,16 +102,16 @@ public class TCPConnector
         return sendRequest(str_updateTrunk);
     }
 
-    public bool addPrefix(string trunkName, string prefix)
+    public bool addPrefix(string contextName, string prefix)
     {        
         string str_addToDialPlan = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
                     "Action-000000: newcat\r\nCat-000000: {0}\r\nAction-000001: append\r\nCat-000001: {0}\r\nVar-000001: exten\r\n"+
                     "Value-000001:>_{1},1,NoOp()\r\nAction-000002: append\r\nCat-000002: {0}\r\nVar-000002: exten\r\n" +
                     "Value-000002:>_{1},n,Dial(SIP/${{EXTEN}}@{0})\r\nAction-000003: append\r\nCat-000003: {0}\r\nVar-000003: exten\r\n" +
-                    "Value-000003:>_{1},n,HangUp()\r\n\r\n", trunkName, createPrefix(prefix));
+                    "Value-000003:>_{1},n,HangUp()\r\n\r\n", contextName, createPrefix(prefix));
         return sendRequest(str_addToDialPlan);
     }
-
+    //preprobit na Bool
     public void createInitialContexts(List<string> asteriskNamesList)
     {
         List<string> dialPlanContextsList = getDialPlanContexts();
@@ -133,8 +133,8 @@ public class TCPConnector
             }
         }
     }
-
-    public void updateAsterisksDialPlans(List<string> asteriskNamesList)
+    //preprobit na Bool
+    public void addToRemoteDialPlans(List<string> asteriskNamesList)
     {
         List<string> dialPlanContextsList = getDialPlanContexts();
         string remoteIncludes = null;
@@ -169,7 +169,7 @@ public class TCPConnector
             }
         }
     }
-
+    //preprobit na Bool
     public void deleteAllRemoteContexts(List<string>asteriskNamesList)
     {        
         string str_deleteRemoteContext = "Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
@@ -194,7 +194,7 @@ public class TCPConnector
             }
         }
     }
-    
+    //preprobit na Bool
     public void deleteOneContext(string deletedContext)
     {
         string str_deleteRemovedContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
@@ -202,14 +202,25 @@ public class TCPConnector
                     "Match-000001: {0}\r\n\r\n", deletedContext);
         sendRequest(str_deleteRemovedContext);
     }
+
+    public void updateDialPlans(string oldContextName, string newContextName, string newPrefix)
+    {
+        string str_updateRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
+                    "Action-000000: update\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000: {1}\r\n" +
+                    "Match-000000: {0}\r\nAction-000001: delCat\r\nCat-000001: {0}\r\nAction-000002: newcat\r\nCat-000002: {1}\r\nAction-000003: append\r\n"+
+                    "Cat-000003: {1}\r\nVar-000003: exten\r\nValue-000003:>_{2},1,NoOp()\r\nAction-000004: append\r\nCat-000004: {1}\r\nVar-000004: exten\r\n" +
+                    "Value-000004:>_{2},n,Dial(SIP/${{EXTEN}}@{1})\r\nAction-000005: append\r\nCat-000005: {1}\r\nVar-000005: exten\r\n" +
+                    "Value-000005:>_{2},n,HangUp()\r\n\r\n", oldContextName, newContextName, createPrefix(newPrefix));
+        sendRequest(str_updateRemoteContext);
+    }
     
     private string createPrefix(string prefix)
     {
         string tmpStr = "XXXXXXXXX";
         return prefix + tmpStr.Substring(prefix.Length);                       
     }
-
-    public List<string> getDialPlanContexts()
+    //skusit prerobit na lepsie riesenie, aby to nekrachlo pri prekroceni 65kb prijatych dat!!
+    private List<string> getDialPlanContexts()
     {
         List<string> tmpDialPlanContextsList = new List<string>();
         List<string> finalDialPlanContextsList = new List<string>();

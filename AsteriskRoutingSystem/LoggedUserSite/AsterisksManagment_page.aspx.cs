@@ -42,6 +42,11 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         closeEdit();
     }
 
+    protected void button_clear_Click(object sender, EventArgs e)
+    {
+        TextBox_log.Text = string.Empty;
+    }
+
     protected void Button_confirm_Click(object sender, EventArgs e)
     {
         if (Page.IsValid)
@@ -118,7 +123,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                     //osetrit co v takom pripade 
                                 }
                                 asteriskNamesList.Add(TextBox_name.Text);
-                                tcp.updateAsterisksDialPlans(asteriskNamesList);
+                                tcp.addToRemoteDialPlans(asteriskNamesList);
                                 tcp.reloadModules();
                                 tcp.logout();
                                 tcp.disconnect();
@@ -254,11 +259,6 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         closeEdit();
     }
 
-    protected void button_clear_Click(object sender, EventArgs e)
-    {
-        TextBox_log.Text = string.Empty;
-    }
-
     protected void Button_edit_Click(object sender, EventArgs e)
     {
         if (Page.IsValid)
@@ -320,6 +320,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                         TextBox_log.Text += "Asterisk" + oneAsterisk.name_Asterisk + " je nedostupný!\n";
                                         //osetrit co v takom pripade 
                                     }
+                                    tcp.updateDialPlans(GridView_Asterisks.SelectedRow.Cells[1].Text, TextBox_name.Text, TextBox_prefix.Text);
                                     tcp.reloadModules();
                                     tcp.logout();
                                     tcp.disconnect();

@@ -129,8 +129,8 @@ End
 
 
 
-select * from Asterisks where id_Asterisk != 39
-delete from Asterisks
+select * from Asterisks 
+delete from Asterisks where id_Asterisk = 126 
 delete from Trunks
 drop table Asterisks
 delete from dbo.aspnet_Users

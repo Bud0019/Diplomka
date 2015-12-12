@@ -11,6 +11,7 @@ using System.Security.Cryptography;
 using System.IO;
 using System.Data;
 
+
 public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
 {
     protected void Page_Load(object sender, EventArgs e)
@@ -57,7 +58,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
             {
                 if (tcp.login(TextBox_login.Text, TextBox_password.Text))
                 {
-                    Asterisk asterisk = new Asterisk();
+                    AsteriskRoutingSystem.Asterisk asterisk = new AsteriskRoutingSystem.Asterisk();
                     asterisk.name_Asterisk = TextBox_name.Text;
                     asterisk.prefix_Asterisk = TextBox_prefix.Text;
                     asterisk.ip_address = TextBox_ipAddress.Text;
@@ -66,9 +67,9 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     asterisk.asterisk_owner = Membership.GetUser().UserName.ToString();
                    
                     AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
-                    List<Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
+                    List<AsteriskRoutingSystem.Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
                     List<string> asteriskNamesList = new List<string>();
-                    foreach(Asterisk asteriskName in asteriskList)
+                    foreach(AsteriskRoutingSystem.Asterisk asteriskName in asteriskList)
                     {
                         asteriskNamesList.Add(asteriskName.name_Asterisk);
                     }
@@ -78,7 +79,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         if (asteriskList.Count > 0)
                         {
                             TextBox_log.Text += "Pridávam k " + asterisk.name_Asterisk + "...\n";
-                            foreach (Asterisk oneAsterisk in asteriskList)
+                            foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                             {
                                 if (tcp.addTrunk(oneAsterisk.name_Asterisk, oneAsterisk.ip_address)) {
                                    tcp.addPrefix(oneAsterisk.name_Asterisk, oneAsterisk.prefix_Asterisk);
@@ -93,7 +94,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                             tcp.reloadModules();                          
                             tcp.logout();
                             tcp.disconnect();                            
-                            foreach (Asterisk oneAsterisk in asteriskList)
+                            foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                             {
                                 TextBox_log.Text += "Pridávam k " + oneAsterisk.name_Asterisk + "...\n";
                                 if (tcp.connect(oneAsterisk.ip_address))
@@ -167,15 +168,15 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         TextBox_log.Text = string.Empty;
         TCPConnector tcp = new TCPConnector();
         AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
-        List<Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
+        List<AsteriskRoutingSystem.Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
         List<string> asteriskNamesList = new List<string>();
-        foreach (Asterisk asteriskName in asteriskList)
+        foreach (AsteriskRoutingSystem.Asterisk asteriskName in asteriskList)
         {
             asteriskNamesList.Add(asteriskName.name_Asterisk);
         }
         StringBuilder sbDeletedAsterisk = new StringBuilder();
         StringBuilder sbRemoteAsterisk = new StringBuilder();
-        foreach (Asterisk asterisk in asteriskList)
+        foreach (AsteriskRoutingSystem.Asterisk asterisk in asteriskList)
         {
             if (asterisk.id_Asterisk == int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()))
             {
@@ -188,7 +189,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         else
                             sbDeletedAsterisk.Append("Asterisk: " + asterisk.name_Asterisk + " odstránený.\n");
                         asteriskAccessLayer.deleteAsterisk(asterisk.id_Asterisk);
-                        foreach (Asterisk otherasterisk in asteriskList)
+                        foreach (AsteriskRoutingSystem.Asterisk otherasterisk in asteriskList)
                         {
                             if (otherasterisk.id_Asterisk == int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()))
                             {
@@ -272,7 +273,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     StringBuilder sbUpdatedAsterisk = new StringBuilder();
                     StringBuilder sbRemoteAsterisk = new StringBuilder();
 
-                    Asterisk asterisk = new Asterisk();
+                    AsteriskRoutingSystem.Asterisk asterisk = new AsteriskRoutingSystem.Asterisk();
                     asterisk.id_Asterisk = int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString());
                     asterisk.name_Asterisk = TextBox_name.Text;
                     asterisk.prefix_Asterisk = TextBox_prefix.Text;
@@ -282,13 +283,13 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     asterisk.asterisk_owner = Membership.GetUser().UserName.ToString();
 
                     AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
-                    List<Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
+                    List<AsteriskRoutingSystem.Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
                     int returnCode;
                     if ((returnCode = asteriskAccessLayer.updateAsterisk(asterisk)) == -1)
                     {
                         if (asteriskList.Count > 1)
                         {
-                            foreach (Asterisk oneAsterisk in asteriskList)
+                            foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                             {
                                 if (oneAsterisk.id_Asterisk == int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()))
                                     continue;

@@ -6,7 +6,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using System.Web;
+using AsterNET.Manager;
+using AsterNET.Manager.Action;
+using AsterNET.Manager.Response;
+using AsterNET.FastAGI;
+using AsterNET.Manager.Event;
+using AsterNET.FastAGI.MappingStrategies;
 
 public class TCPConnector
 {
@@ -17,8 +22,8 @@ public class TCPConnector
     public bool connect(string ipAddress)
     {
         try
-        {            
-            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);            
+        {
+            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), PORT);
             clientSocket.Connect(serverEndPoint);
             return true;
@@ -35,15 +40,15 @@ public class TCPConnector
     }
 
     private bool sendRequest(string message)
-    {       
-        
-        clientSocket.Send(Encoding.ASCII.GetBytes(message));
+    {
+
+        clientSocket.Send(Encoding.ASCII.GetBytes(message), Encoding.ASCII.GetByteCount(message), SocketFlags.None);
         int bytesRead = 0;
 
         do
         {
             byte[] buffer = new byte[clientSocket.ReceiveBufferSize];
-            bytesRead = clientSocket.Receive(buffer);           
+            bytesRead = clientSocket.Receive(buffer);
             string response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
 
             if (Regex.Match(response, "Response: Success", RegexOptions.IgnoreCase).Success)
@@ -103,9 +108,9 @@ public class TCPConnector
     }
 
     public bool addPrefix(string contextName, string prefix)
-    {        
+    {
         string str_addToDialPlan = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: newcat\r\nCat-000000: {0}\r\nAction-000001: append\r\nCat-000001: {0}\r\nVar-000001: exten\r\n"+
+                    "Action-000000: newcat\r\nCat-000000: {0}\r\nAction-000001: append\r\nCat-000001: {0}\r\nVar-000001: exten\r\n" +
                     "Value-000001:>_{1},1,NoOp()\r\nAction-000002: append\r\nCat-000002: {0}\r\nVar-000002: exten\r\n" +
                     "Value-000002:>_{1},n,Dial(SIP/${{EXTEN}}@{0})\r\nAction-000003: append\r\nCat-000003: {0}\r\nVar-000003: exten\r\n" +
                     "Value-000003:>_{1},n,HangUp()\r\n\r\n", contextName, createPrefix(prefix));
@@ -121,7 +126,7 @@ public class TCPConnector
 
         foreach (string context in dialPlanContextsList)
         {
-            string pureContextName = context.Substring(8, (context.IndexOf("\r")-8));
+            string pureContextName = context.Substring(8, (context.IndexOf("\r") - 8));
             string str_addToRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
                 "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", pureContextName);
             sendRequest(str_addToRemoteContext);
@@ -170,13 +175,13 @@ public class TCPConnector
         }
     }
     //preprobit na Bool
-    public void deleteAllRemoteContexts(List<string>asteriskNamesList)
-    {        
+    public void deleteAllRemoteContexts(List<string> asteriskNamesList)
+    {
         string str_deleteRemoteContext = "Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
                     "Action-000000: delcat\r\nCat-000000: remote\r\n\r\n";
         sendRequest(str_deleteRemoteContext);
         List<string> dialPlanContextsList = getDialPlanContexts();
-        
+
         foreach (string context in dialPlanContextsList)
         {
             string pureContextName = context.Substring(8, (context.IndexOf("\r") - 8));
@@ -187,7 +192,7 @@ public class TCPConnector
                 sendRequest(str_deleteAsterisksContexts);
             }
             else
-            {                
+            {
                 string str_deleteIncludeRemote = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
                     "Action-000000: delete\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000: remote\r\nMatch-000000: remote\r\n\r\n", pureContextName);
                 sendRequest(str_deleteIncludeRemote);
@@ -198,7 +203,7 @@ public class TCPConnector
     public void deleteOneContext(string deletedContext)
     {
         string str_deleteRemovedContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: delcat\r\nCat-000000: {0}\r\nAction-000001: delete\r\nCat-000001: remote\r\nVar-000001: include\r\nValue-000001: {0}\r\n"+
+                    "Action-000000: delcat\r\nCat-000000: {0}\r\nAction-000001: delete\r\nCat-000001: remote\r\nVar-000001: include\r\nValue-000001: {0}\r\n" +
                     "Match-000001: {0}\r\n\r\n", deletedContext);
         sendRequest(str_deleteRemovedContext);
     }
@@ -207,26 +212,33 @@ public class TCPConnector
     {
         string str_updateRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
                     "Action-000000: update\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000: {1}\r\n" +
-                    "Match-000000: {0}\r\nAction-000001: delCat\r\nCat-000001: {0}\r\nAction-000002: newcat\r\nCat-000002: {1}\r\nAction-000003: append\r\n"+
+                    "Match-000000: {0}\r\nAction-000001: delCat\r\nCat-000001: {0}\r\nAction-000002: newcat\r\nCat-000002: {1}\r\nAction-000003: append\r\n" +
                     "Cat-000003: {1}\r\nVar-000003: exten\r\nValue-000003:>_{2},1,NoOp()\r\nAction-000004: append\r\nCat-000004: {1}\r\nVar-000004: exten\r\n" +
                     "Value-000004:>_{2},n,Dial(SIP/${{EXTEN}}@{1})\r\nAction-000005: append\r\nCat-000005: {1}\r\nVar-000005: exten\r\n" +
                     "Value-000005:>_{2},n,HangUp()\r\n\r\n", oldContextName, newContextName, createPrefix(newPrefix));
         sendRequest(str_updateRemoteContext);
     }
-    
+
+    public void ping()
+    {
+        string str_ping = "Action: ping\r\n\r\n";
+        sendRequest(str_ping);
+    }
+
     private string createPrefix(string prefix)
     {
         string tmpStr = "XXXXXXXXX";
-        return prefix + tmpStr.Substring(prefix.Length);                       
+        return prefix + tmpStr.Substring(prefix.Length);
     }
     //skusit prerobit na lepsie riesenie, aby to nekrachlo pri prekroceni 65kb prijatych dat!!
     private List<string> getDialPlanContexts()
     {
         List<string> tmpDialPlanContextsList = new List<string>();
         List<string> finalDialPlanContextsList = new List<string>();
-        string str_getDialPlanContexts = "Action: GetConfig\r\nSynopsis: Retrieve configuration\r\nPrivilege: config,all\r\nDescription: test\r\n"+
+        string str_getDialPlanContexts = "Action: GetConfig\r\nSynopsis: Retrieve configuration\r\nPrivilege: config,all\r\nDescription: test\r\n" +
             "Variables: \r\nFilename: extensions.conf\r\n\r\n";
-        clientSocket.Send(Encoding.ASCII.GetBytes(str_getDialPlanContexts));
+        test();
+        clientSocket.Send(Encoding.ASCII.GetBytes(str_getDialPlanContexts), Encoding.ASCII.GetByteCount(str_getDialPlanContexts), SocketFlags.None);
         int bytesRead = 0;
         string[] subStrings;
         Thread.Sleep(200);
@@ -237,16 +249,16 @@ public class TCPConnector
             string response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
             response = response.Substring(response.IndexOf("Response"));
             if (Regex.Match(response, "Response: Success", RegexOptions.IgnoreCase).Success)
-            {                              
+            {
                 subStrings = response.Split(new string[] { "Category-" }, StringSplitOptions.None);
                 tmpDialPlanContextsList = subStrings.OfType<string>().ToList();
-                tmpDialPlanContextsList.RemoveAt(0);              
-                foreach(string context in tmpDialPlanContextsList)
+                tmpDialPlanContextsList.RemoveAt(0);
+                foreach (string context in tmpDialPlanContextsList)
                 {
-                   finalDialPlanContextsList.Add(context);                  
+                    finalDialPlanContextsList.Add(context);
                 }
                 return finalDialPlanContextsList;
-                
+
             }
             else if (Regex.Match(response, "Response: Error", RegexOptions.IgnoreCase).Success)
             {
@@ -254,7 +266,31 @@ public class TCPConnector
             }
         } while (bytesRead != 0);
         return finalDialPlanContextsList;
-    }   
+    }
+
+    public void test() {
+        ManagerConnection mc = new ManagerConnection("158.196.244.214", 5038, "asterisk214", "asterisk214");
+        mc.Login();
+        if (mc.IsConnected()) {    
+        ManagerResponse mr = mc.SendAction(new GetConfigAction("extensions.conf"));
+            if (mr.IsSuccess())
+            {
+                GetConfigResponse responseConfig = (GetConfigResponse)mr;
+                foreach (int key in responseConfig.Categories.Keys)
+                {
+                    Console.WriteLine(string.Format("{0}:{1}", key, responseConfig.Categories[key]));
+                    foreach (int keyLine in responseConfig.Lines(key).Keys)
+                    {
+                        Console.WriteLine(string.Format("\t{0}:{1}", keyLine, responseConfig.Lines(key)[keyLine]));
+                    }
+                }
+            }
+            else
+                Console.WriteLine(mr);
+        }
+
+    }
+         
 }
 
 

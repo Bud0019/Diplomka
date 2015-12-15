@@ -237,7 +237,7 @@ public class TCPConnector
         List<string> finalDialPlanContextsList = new List<string>();
         string str_getDialPlanContexts = "Action: GetConfig\r\nSynopsis: Retrieve configuration\r\nPrivilege: config,all\r\nDescription: test\r\n" +
             "Variables: \r\nFilename: extensions.conf\r\n\r\n";
-        test();
+        //test();
         clientSocket.Send(Encoding.ASCII.GetBytes(str_getDialPlanContexts), Encoding.ASCII.GetByteCount(str_getDialPlanContexts), SocketFlags.None);
         int bytesRead = 0;
         string[] subStrings;
@@ -288,7 +288,17 @@ public class TCPConnector
             else
                 Console.WriteLine(mr);
         }
-
+        UpdateConfigAction up = new UpdateConfigAction("sip.conf", "sip.conf", false);
+        up.AddCommand(UpdateConfigAction.ACTION_NEWCAT, "asternet");
+        up.AddCommand(UpdateConfigAction.ACTION_APPEND, "asternet", "host", "158.196.244.214");
+        up.AddCommand(UpdateConfigAction.ACTION_APPEND, "asternet", "type", "peer");
+        up.AddCommand(UpdateConfigAction.ACTION_APPEND, "asternet", "context", "remote");
+        ManagerResponse mr1 = mc.SendAction(up);
+        if (mr1.IsSuccess())
+        {
+            Console.WriteLine(mr1);
+        }
+        mc.Logoff();
     }
          
 }

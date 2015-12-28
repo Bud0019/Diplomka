@@ -12,6 +12,7 @@ using AsterNET.Manager.Response;
 using AsterNET.FastAGI;
 using AsterNET.Manager.Event;
 using AsterNET.FastAGI.MappingStrategies;
+using System.Security.Cryptography;
 
 public class TCPConnector
 {
@@ -19,103 +20,87 @@ public class TCPConnector
     private Socket clientSocket;
     private const int PORT = 5038;
 
-    public bool connect(string ipAddress)
+    private ManagerConnection managerConnection;
+    private ManagerResponse managerResponse;
+
+
+    public void reloadModules()
     {
-        try
+        UpdateConfigAction reloadSipConf = new UpdateConfigAction("sip.conf", "sip.conf", true);
+        UpdateConfigAction reloadExtensionsConf = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        managerResponse = managerConnection.SendAction(reloadSipConf);
+        managerResponse = managerConnection.SendAction(reloadExtensionsConf);
+    }
+
+    public bool addTrunk(string trunkName, string hostIP)
+    {
+        UpdateConfigAction addTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
+        addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, trunkName);
+        addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "host", hostIP);
+        addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "type", "peer");
+        addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "secret", "AsteriskRoutingSystem");
+        addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "context", "remote");
+        managerResponse = managerConnection.SendAction(addTrunkUpdateConfig);
+        if (managerResponse.IsSuccess())
         {
-            clientSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            IPEndPoint serverEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), PORT);
-            clientSocket.Connect(serverEndPoint);
             return true;
         }
-        catch (Exception e)
+        else
         {
             return false;
         }
     }
 
-    public void disconnect()
-    {
-        clientSocket.Disconnect(false);
-    }
-
-    private bool sendRequest(string message)
-    {
-
-        clientSocket.Send(Encoding.ASCII.GetBytes(message), Encoding.ASCII.GetByteCount(message), SocketFlags.None);
-        int bytesRead = 0;
-
-        do
-        {
-            byte[] buffer = new byte[clientSocket.ReceiveBufferSize];
-            bytesRead = clientSocket.Receive(buffer);
-            string response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-
-            if (Regex.Match(response, "Response: Success", RegexOptions.IgnoreCase).Success)
-            {
-                return true;
-            }
-            else if (Regex.Match(response, "Response: Error", RegexOptions.IgnoreCase).Success)
-            {
-                return false;
-            }
-
-        } while (bytesRead != 0);
-        return false;
-    }
-
-    public bool login(string userName, string password)
-    {
-        string str_login = String.Format("Action: Login\r\nUsername: {0}\r\nSecret: {1}\r\nActionID: 1\r\n\r\n", userName, password);
-        return sendRequest(str_login);
-    }
-
-    public void logout()
-    {
-        clientSocket.Send(Encoding.ASCII.GetBytes("Action: Logoff"));
-    }
-
-    public bool addTrunk(string trunkName, string hostIP)
-    {
-        string str_addTrunk = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: sip.conf\r\ndstfilename: sip.conf\r\n" +
-            "Action-000000: newcat\r\nCat-000000: {0}\r\nAction-000001: append\r\nCat-000001: {0}\r\nVar-000001: type\r\nValue-000001: peer\r\n" +
-            "Action-000002: append\r\nCat-000002: {0}\r\nVar-000002: host\r\nValue-000002: {1}\r\n" +
-            "Action-000003: append\r\nCat-000003: {0}\r\nVar-000003: context\r\nValue-000003: remote\r\n\r\n", trunkName, hostIP);
-        return sendRequest(str_addTrunk);
-    }
-
-    public void reloadModules()
-    {
-        string str_reloadSip = String.Format("Action: Reload\r\nModule: chan_sip\r\n\r\n");
-        string str_reloadDialplan = String.Format("Action: Reload\r\nModule: pbx_config\r\n\r\n");
-        sendRequest(str_reloadSip);
-        sendRequest(str_reloadDialplan);
-    }
-
     public bool deleteTrunk(string trunkName)
     {
-        string str_delTrunk = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: sip.conf\r\ndstfilename: sip.conf\r\n" +
-            "Action-000000: delcat\r\nCat-000000: {0}\r\n\r\n", trunkName);
-        return sendRequest(str_delTrunk);
+        UpdateConfigAction deleteTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
+        deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, trunkName);
+        managerResponse = managerConnection.SendAction(deleteTrunkUpdateConfig);
+        if (managerResponse.IsSuccess())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public bool updateTrunk(string oldTrunkName, string newTrunkName, string hostIP)
     {
-        string str_updateTrunk = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: sip.conf\r\ndstfilename: sip.conf\r\n" +
-            "Action-000000: renamecat\r\nCat-000000: {0}\r\nValue-000000: {1}\r\nAction-000001: update\r\nCat-000001: {1}\r\nVar-000001: host\r\nValue-000001: {2}\r\n\r\n",
-            oldTrunkName, newTrunkName, hostIP);
-        return sendRequest(str_updateTrunk);
+        UpdateConfigAction updateTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
+        updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_RENAMECAT, oldTrunkName,null,newTrunkName);
+        updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, newTrunkName, "host", hostIP);
+        managerResponse = managerConnection.SendAction(updateTrunkUpdateConfig);
+        if (managerResponse.IsSuccess())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     public bool addPrefix(string contextName, string prefix)
     {
-        string str_addToDialPlan = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: newcat\r\nCat-000000: {0}\r\nAction-000001: append\r\nCat-000001: {0}\r\nVar-000001: exten\r\n" +
-                    "Value-000001:>_{1},1,NoOp()\r\nAction-000002: append\r\nCat-000002: {0}\r\nVar-000002: exten\r\n" +
-                    "Value-000002:>_{1},n,Dial(SIP/${{EXTEN}}@{0})\r\nAction-000003: append\r\nCat-000003: {0}\r\nVar-000003: exten\r\n" +
-                    "Value-000003:>_{1},n,HangUp()\r\n\r\n", contextName, createPrefix(prefix));
-        return sendRequest(str_addToDialPlan);
+        string createdPrefix = createPrefix(prefix);
+        UpdateConfigAction addPrefixUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, contextName);
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",1,NoOp()");
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${{EXTEN}}@" + contextName + ")");
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,HangUp()");
+        managerResponse = managerConnection.SendAction(addPrefixUpdateConfig);
+        if (managerResponse.IsSuccess())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
+
     //preprobit na Bool
     public void createInitialContexts(List<string> asteriskNamesList)
     {
@@ -138,6 +123,12 @@ public class TCPConnector
             }
         }
     }
+
+    public bool createInitialContexts(List<string> asteriskNameList)
+    {
+
+    }
+
     //preprobit na Bool
     public void addToRemoteDialPlans(List<string> asteriskNamesList)
     {
@@ -268,6 +259,27 @@ public class TCPConnector
         return finalDialPlanContextsList;
     }
 
+    public bool login(string ipAddress, string amiLogin, string amiPassword)
+    {
+        managerConnection = new ManagerConnection(ipAddress, PORT, amiLogin, amiPassword);
+        managerConnection.Login(30000);
+        if (managerConnection.IsConnected())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public void logoff()
+    {
+        managerConnection.Logoff();
+    }
+
+
+
     public void test() {
         ManagerConnection mc = new ManagerConnection("158.196.244.214", 5038, "asterisk214", "asterisk214");
         mc.Login();
@@ -300,7 +312,6 @@ public class TCPConnector
         }
         mc.Logoff();
     }
-         
 }
 
 

@@ -154,44 +154,6 @@ public class TCPConnector
             return false;
     }
 
-    //preprobit na Bool
-    /*
-    public void addToRemoteDialPlans(List<string> asteriskNamesList)
-    {
-        List<string> dialPlanContextsList = getDialPlanContexts();
-        string remoteIncludes = null;
-        foreach (string context in dialPlanContextsList)
-        {
-            if (Regex.Match(context, ": remote", RegexOptions.IgnoreCase).Success)
-            {
-                remoteIncludes = context;
-                break;
-            }
-        }
-        foreach (string context in dialPlanContextsList)
-        {
-            string pureContextName = context.Substring(8, (context.IndexOf("\r") - 8));
-            if (!pureContextName.Equals("remote"))
-            {
-                if (!Regex.Match(remoteIncludes, "include=" + pureContextName, RegexOptions.IgnoreCase).Success)
-                {
-                    string str_addToRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                   "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", pureContextName);
-                    sendRequest(str_addToRemoteContext);
-                }
-                if (!asteriskNamesList.Contains(pureContextName))
-                {
-                    if (!Regex.Match(context, "include=remote", RegexOptions.IgnoreCase).Success)
-                    {
-                        string str_addToInternalContexts = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                            "Action-000000: append\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000:>remote\r\n\r\n", pureContextName);
-                        sendRequest(str_addToInternalContexts);
-                    }
-                }
-            }
-        }
-    }
-    */
     public bool addToRemoteDialPlans(List<string> asteriskNamesList)
     {
         managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
@@ -205,13 +167,13 @@ public class TCPConnector
                 string extensionsCategory = responseConfig.Categories[key];
                 if (!extensionsCategory.Equals("remote"))
                 {
-                    if (!responseConfig.Lines(remoteIndex).ContainsValue("include = " + extensionsCategory))
+                    if (!responseConfig.Lines(remoteIndex).ContainsValue("include=" + extensionsCategory))
                     {
                         addToRemoteDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "remote", "include", extensionsCategory);
                     }
                     if (!asteriskNamesList.Contains(extensionsCategory))
                     {
-                        if(!responseConfig.Lines(key).ContainsValue("include = remote"))
+                        if(!responseConfig.Lines(key).ContainsValue("include=remote"))
                         {
                             addToRemoteDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, extensionsCategory, "include", "remote");
                         }
@@ -228,89 +190,80 @@ public class TCPConnector
         else
             return false;
     }
-    /*
-    //preprobit na Bool
-    public void deleteAllRemoteContexts(List<string> asteriskNamesList)
-    {
-        string str_deleteRemoteContext = "Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: delcat\r\nCat-000000: remote\r\n\r\n";
-        sendRequest(str_deleteRemoteContext);
-        List<string> dialPlanContextsList = getDialPlanContexts();
 
-        foreach (string context in dialPlanContextsList)
+    public bool deleteAllRemoteContexts(List<string> asteriskNamesList)
+    {
+        UpdateConfigAction deleteRemoteContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        deleteRemoteContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, "remote");
+        managerResponse = managerConnection.SendAction(deleteRemoteContextUpdateConfig);
+        if (!managerResponse.IsSuccess())
         {
-            string pureContextName = context.Substring(8, (context.IndexOf("\r") - 8));
-            if (asteriskNamesList.Contains(pureContextName))
-            {
-                string str_deleteAsterisksContexts = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: delcat\r\nCat-000000: {0}\r\n\r\n", pureContextName);
-                sendRequest(str_deleteAsterisksContexts);
-            }
-            else
-            {
-                string str_deleteIncludeRemote = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: delete\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000: remote\r\nMatch-000000: remote\r\n\r\n", pureContextName);
-                sendRequest(str_deleteIncludeRemote);
-            }
+            return false;
         }
-    }
-    //preprobit na Bool
-    public void deleteOneContext(string deletedContext)
-    {
-        string str_deleteRemovedContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: delcat\r\nCat-000000: {0}\r\nAction-000001: delete\r\nCat-000001: remote\r\nVar-000001: include\r\nValue-000001: {0}\r\n" +
-                    "Match-000001: {0}\r\n\r\n", deletedContext);
-        sendRequest(str_deleteRemovedContext);
+
+        managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
+        UpdateConfigAction deleteAsteriskUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        if (managerResponse.IsSuccess())
+        {
+            GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;
+            foreach (int key in responseConfig.Categories.Keys)
+            {
+                string extensionsCategory = responseConfig.Categories[key];
+                if (asteriskNamesList.Contains(extensionsCategory))
+                {
+                    deleteAsteriskUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, extensionsCategory);
+                }
+                else
+                {
+                    deleteAsteriskUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, extensionsCategory, "include", "remote", "remote");
+                }
+            }
+            managerResponse = managerConnection.SendAction(deleteAsteriskUpdateConfig);
+            if (!managerResponse.IsSuccess())
+            {
+                return false;
+            }
+            return true;
+        }
+        else
+            return false;
     }
 
-    public void updateDialPlans(string oldContextName, string newContextName, string newPrefix)
+    public bool deleteOneContext(string deletedContext)
     {
-        string str_updateRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: update\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000: {1}\r\n" +
-                    "Match-000000: {0}\r\nAction-000001: delCat\r\nCat-000001: {0}\r\nAction-000002: newcat\r\nCat-000002: {1}\r\nAction-000003: append\r\n" +
-                    "Cat-000003: {1}\r\nVar-000003: exten\r\nValue-000003:>_{2},1,NoOp()\r\nAction-000004: append\r\nCat-000004: {1}\r\nVar-000004: exten\r\n" +
-                    "Value-000004:>_{2},n,Dial(SIP/${{EXTEN}}@{1})\r\nAction-000005: append\r\nCat-000005: {1}\r\nVar-000005: exten\r\n" +
-                    "Value-000005:>_{2},n,HangUp()\r\n\r\n", oldContextName, newContextName, createPrefix(newPrefix));
-        sendRequest(str_updateRemoteContext);
+        UpdateConfigAction deleteOneContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        deleteOneContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, deletedContext);
+        deleteOneContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "remote", "include", deletedContext, deletedContext);
+        managerResponse = managerConnection.SendAction(deleteOneContextUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        return true;
     }
-    */
+
+    public bool updateDialPlans(string oldContextName, string newContextName, string newPrefix)
+    {
+        string createdPrefix = createPrefix(newPrefix);
+        UpdateConfigAction updateDialPlansUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, "remote", "include", newContextName, oldContextName);
+        updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, oldContextName);
+        updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, newContextName);
+        updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newContextName, "exten", "_" + createdPrefix + ",1,NoOp()");
+        updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newContextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${{EXTEN}}@" + newContextName + ")");
+        updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newContextName, "exten", "_" + createdPrefix + ",n,HangUp()");
+        managerResponse = managerConnection.SendAction(updateDialPlansUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        return true;
+    }
+
     private string createPrefix(string prefix)
     {
         string tmpStr = "XXXXXXXXX";
         return prefix + tmpStr.Substring(prefix.Length);
-    }
-   
-    public void test() {
-        ManagerConnection mc = new ManagerConnection("158.196.244.214", 5038, "asterisk214", "asterisk214");
-        mc.Login();
-        if (mc.IsConnected()) {    
-        ManagerResponse mr = mc.SendAction(new GetConfigAction("extensions.conf"));
-            if (mr.IsSuccess())
-            {
-                GetConfigResponse responseConfig = (GetConfigResponse)mr;
-                foreach (int key in responseConfig.Categories.Keys)
-                {
-                    Console.WriteLine(string.Format("{0}:{1}", key, responseConfig.Categories[key]));
-                    foreach (int keyLine in responseConfig.Lines(key).Keys)
-                    {
-                        Console.WriteLine(string.Format("\t{0}:{1}", keyLine, responseConfig.Lines(key)[keyLine]));
-                    }
-                }
-            }
-            else
-                Console.WriteLine(mr);
-        }
-        UpdateConfigAction up = new UpdateConfigAction("sip.conf", "sip.conf", false);
-        up.AddCommand(UpdateConfigAction.ACTION_NEWCAT, "asternet");
-        up.AddCommand(UpdateConfigAction.ACTION_APPEND, "asternet", "host", "158.196.244.214");
-        up.AddCommand(UpdateConfigAction.ACTION_APPEND, "asternet", "type", "peer");
-        up.AddCommand(UpdateConfigAction.ACTION_APPEND, "asternet", "context", "remote");
-        ManagerResponse mr1 = mc.SendAction(up);
-        if (mr1.IsSuccess())
-        {
-            Console.WriteLine(mr1);
-        }
-        mc.Logoff();
     }
 }
 

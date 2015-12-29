@@ -166,7 +166,6 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
     protected void Button_delete_Click(object sender, EventArgs e)
     {
 
-        /*
         TextBox_log.Text = string.Empty;
         TCPConnector tcp = new TCPConnector();
         AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
@@ -181,10 +180,8 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         foreach (AsteriskRoutingSystem.Asterisk asterisk in asteriskList)
         {
             if (asterisk.id_Asterisk == int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()))
-            {
-                if (tcp.connect(asterisk.ip_address))
-                {
-                    if (tcp.login(asterisk.login_AMI, DecryptAMIPassword(asterisk.password_AMI)))
+            {               
+                    if (tcp.login(asterisk.ip_address, asterisk.login_AMI, DecryptAMIPassword(asterisk.password_AMI)))
                     {
                         if (asteriskList.Count > 1)
                             sbDeletedAsterisk.Append("Odstraňujem z: " + asterisk.name_Asterisk + "...\n");
@@ -208,27 +205,17 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         }
                         tcp.deleteAllRemoteContexts(asteriskNamesList);
                         tcp.reloadModules();
-                        tcp.logout();
-                        tcp.disconnect();
+                        tcp.logoff();
                     }
                     else
                     {
-                        //to do co v takom pripade
-                        tcp.disconnect();
+                        //to do co v takom pripade                        
                         sbDeletedAsterisk.Append("Asterisk: " + asterisk.name_Asterisk + " je nedostupný!\n");
-                    }
-                }
-                else
-                {
-                    //to do co v takom pripade
-                    sbDeletedAsterisk.Append("Asterisk: " + asterisk.name_Asterisk + " je nedostupný!\n");
-                }
+                    }         
             }
             else
-            {
-                if (tcp.connect(asterisk.ip_address))
-                {
-                    if (tcp.login(asterisk.login_AMI, DecryptAMIPassword(asterisk.password_AMI)))
+            {                
+                    if (tcp.login(asterisk.ip_address, asterisk.login_AMI, DecryptAMIPassword(asterisk.password_AMI)))
                     {
                         sbRemoteAsterisk.Append("Odstraňujem z: " + asterisk.name_Asterisk + "...\n");
                         if (tcp.deleteTrunk(GridView_Asterisks.SelectedRow.Cells[1].Text))
@@ -240,37 +227,27 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                             sbRemoteAsterisk.Append("Vymazanie: " + GridView_Asterisks.SelectedRow.Cells[1].Text + " zlyhalo!\n");
                         tcp.deleteOneContext(TextBox_name.Text);
                         tcp.reloadModules();
-                        tcp.logout();
-                        tcp.disconnect();
+                        tcp.logoff();
                     }
                     else
                     {
-                        //to do co v takom pripade
-                        tcp.disconnect();
+                        //to do co v takom pripade                       
                         sbRemoteAsterisk.Append("Asterisk: " + asterisk.name_Asterisk + " je nedostupný!\n");
-                    }
-                }
-                else
-                {
-                    //to do co v takom pripade
-                    sbRemoteAsterisk.Append("Asterisk: " + asterisk.name_Asterisk + " je nedostupný!\n");
-                }
+                    }               
             }
         }
         TextBox_log.Text = sbDeletedAsterisk.ToString() + sbRemoteAsterisk.ToString();
         GridView_Asterisks.DataBind();
-        closeEdit();*/
+        closeEdit();
     }
 
     protected void Button_edit_Click(object sender, EventArgs e)
-    {/*
+    {
         if (Page.IsValid)
         {
             TextBox_log.Text = string.Empty;
-            TCPConnector tcp = new TCPConnector();
-            if (tcp.connect(TextBox_ipAddress.Text))
-            {
-                if (tcp.login(TextBox_login.Text, TextBox_password.Text))
+            TCPConnector tcp = new TCPConnector();           
+                if (tcp.login(TextBox_ipAddress.Text, TextBox_login.Text, TextBox_password.Text))
                 {
                     StringBuilder sbUpdatedAsterisk = new StringBuilder();
                     StringBuilder sbRemoteAsterisk = new StringBuilder();
@@ -298,9 +275,8 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                 else
                                 {
                                     TextBox_log.Text += "Upravujem v " + oneAsterisk.name_Asterisk + "...\n";
-                                    if (tcp.connect(oneAsterisk.ip_address))
-                                    {
-                                        if (tcp.login(oneAsterisk.login_AMI, DecryptAMIPassword(oneAsterisk.password_AMI)))
+                                   
+                                        if (tcp.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, DecryptAMIPassword(oneAsterisk.password_AMI)))
                                         {
                                             if (tcp.updateTrunk(GridView_Asterisks.SelectedRow.Cells[1].Text, asterisk.name_Asterisk, asterisk.ip_address))
                                             {
@@ -317,16 +293,10 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                             TextBox_log.Text += "Pripojenie k AMI " + oneAsterisk.name_Asterisk + " zlyhalo!\n";
                                             //osetrit co v takom pripade 
                                         }
-                                    }
-                                    else
-                                    {
-                                        TextBox_log.Text += "Asterisk" + oneAsterisk.name_Asterisk + " je nedostupný!\n";
-                                        //osetrit co v takom pripade 
-                                    }
+                                   
                                     tcp.updateDialPlans(GridView_Asterisks.SelectedRow.Cells[1].Text, TextBox_name.Text, TextBox_prefix.Text);
                                     tcp.reloadModules();
-                                    tcp.logout();
-                                    tcp.disconnect();
+                                    tcp.logoff();
                                 }
                             }
                         }
@@ -352,14 +322,8 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                 else
                 {
                     TextBox_log.Text += "Pripojenie k AMI " + TextBox_name.Text + " zlyhalo!\n";
-                }
-                tcp.disconnect();
-            }
-            else
-            {
-                TextBox_log.Text += "Pripojenie na socket " + TextBox_name.Text + " zlyhalo!\n";
-            }
-        }*/
+                }                        
+        }
     }
 
     private void closeEdit()

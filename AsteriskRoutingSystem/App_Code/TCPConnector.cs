@@ -17,12 +17,30 @@ using System.Security.Cryptography;
 public class TCPConnector
 {
 
-    private Socket clientSocket;
     private const int PORT = 5038;
 
     private ManagerConnection managerConnection;
     private ManagerResponse managerResponse;
 
+
+    public bool login(string ipAddress, string amiLogin, string amiPassword)
+    {
+        managerConnection = new ManagerConnection(ipAddress, PORT, amiLogin, amiPassword);
+        managerConnection.Login(30000);
+        if (managerConnection.IsConnected())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public void logoff()
+    {
+        managerConnection.Logoff();
+    }
 
     public void reloadModules()
     {
@@ -100,36 +118,44 @@ public class TCPConnector
             return false;
         }
     }
-
-    //preprobit na Bool
-    public void createInitialContexts(List<string> asteriskNamesList)
-    {
-        List<string> dialPlanContextsList = getDialPlanContexts();
-        string str_addRemoteContext = "Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                    "Action-000000: newcat\r\nCat-000000: remote\r\n\r\n";
-        sendRequest(str_addRemoteContext);
-
-        foreach (string context in dialPlanContextsList)
-        {
-            string pureContextName = context.Substring(8, (context.IndexOf("\r") - 8));
-            string str_addToRemoteContext = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                "Action-000000: append\r\nCat-000000: remote\r\nVar-000000: include\r\nValue-000000:>{0}\r\n\r\n", pureContextName);
-            sendRequest(str_addToRemoteContext);
-            if (!asteriskNamesList.Contains(pureContextName))
-            {
-                string str_addToInternalContexts = String.Format("Action: UpdateConfig\r\nReload: no\r\nsrcfilename: extensions.conf\r\ndstfilename: extensions.conf\r\n" +
-                "Action-000000: append\r\nCat-000000: {0}\r\nVar-000000: include\r\nValue-000000:>remote\r\n\r\n", pureContextName);
-                sendRequest(str_addToInternalContexts);
-            }
-        }
-    }
-
+  
     public bool createInitialContexts(List<string> asteriskNameList)
-    {
-
+    {        
+        managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
+        UpdateConfigAction addToExtensionsUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        if (managerResponse.IsSuccess())
+        {
+            GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;
+            UpdateConfigAction createRemoteUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+            createRemoteUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, "remote");
+            managerResponse = managerConnection.SendAction(createRemoteUpdateConfig);
+            if (!managerResponse.IsSuccess())
+            {
+                return false;
+            }
+            foreach (int key in responseConfig.Categories.Keys)
+            {
+                string extensionsCategory = responseConfig.Categories[key];                
+                addToExtensionsUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "remote", "include", extensionsCategory);
+                
+                if (!asteriskNameList.Contains(extensionsCategory))
+                {                   
+                    addToExtensionsUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, extensionsCategory, "include", "remote");                   
+                }
+            }
+            managerResponse = managerConnection.SendAction(addToExtensionsUpdateConfig);
+            if (!managerResponse.IsSuccess())
+            {
+                return false;
+            }            
+            return true;            
+        }
+        else
+            return false;
     }
 
     //preprobit na Bool
+    /*
     public void addToRemoteDialPlans(List<string> asteriskNamesList)
     {
         List<string> dialPlanContextsList = getDialPlanContexts();
@@ -165,6 +191,44 @@ public class TCPConnector
             }
         }
     }
+    */
+    public bool addToRemoteDialPlans(List<string> asteriskNamesList)
+    {
+        managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
+        UpdateConfigAction addToRemoteDialPlansUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        if (managerResponse.IsSuccess())
+        {
+            GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;
+            int remoteIndex = responseConfig.Categories.Values.ToList().IndexOf("remote");
+            foreach (int key in responseConfig.Categories.Keys)
+            {
+                string extensionsCategory = responseConfig.Categories[key];
+                if (!extensionsCategory.Equals("remote"))
+                {
+                    if (!responseConfig.Lines(remoteIndex).ContainsValue("include = " + extensionsCategory))
+                    {
+                        addToRemoteDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "remote", "include", extensionsCategory);
+                    }
+                    if (!asteriskNamesList.Contains(extensionsCategory))
+                    {
+                        if(!responseConfig.Lines(key).ContainsValue("include = remote"))
+                        {
+                            addToRemoteDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, extensionsCategory, "include", "remote");
+                        }
+                    }
+                }              
+            }
+            managerResponse = managerConnection.SendAction(addToRemoteDialPlansUpdateConfig);
+            if (!managerResponse.IsSuccess())
+            {
+                return false;
+            }
+            return true;
+        }
+        else
+            return false;
+    }
+    /*
     //preprobit na Bool
     public void deleteAllRemoteContexts(List<string> asteriskNamesList)
     {
@@ -209,77 +273,13 @@ public class TCPConnector
                     "Value-000005:>_{2},n,HangUp()\r\n\r\n", oldContextName, newContextName, createPrefix(newPrefix));
         sendRequest(str_updateRemoteContext);
     }
-
-    public void ping()
-    {
-        string str_ping = "Action: ping\r\n\r\n";
-        sendRequest(str_ping);
-    }
-
+    */
     private string createPrefix(string prefix)
     {
         string tmpStr = "XXXXXXXXX";
         return prefix + tmpStr.Substring(prefix.Length);
     }
-    //skusit prerobit na lepsie riesenie, aby to nekrachlo pri prekroceni 65kb prijatych dat!!
-    private List<string> getDialPlanContexts()
-    {
-        List<string> tmpDialPlanContextsList = new List<string>();
-        List<string> finalDialPlanContextsList = new List<string>();
-        string str_getDialPlanContexts = "Action: GetConfig\r\nSynopsis: Retrieve configuration\r\nPrivilege: config,all\r\nDescription: test\r\n" +
-            "Variables: \r\nFilename: extensions.conf\r\n\r\n";
-        //test();
-        clientSocket.Send(Encoding.ASCII.GetBytes(str_getDialPlanContexts), Encoding.ASCII.GetByteCount(str_getDialPlanContexts), SocketFlags.None);
-        int bytesRead = 0;
-        string[] subStrings;
-        Thread.Sleep(200);
-        do
-        {
-            byte[] buffer = new byte[clientSocket.ReceiveBufferSize];
-            bytesRead = clientSocket.Receive(buffer);
-            string response = Encoding.ASCII.GetString(buffer, 0, bytesRead);
-            response = response.Substring(response.IndexOf("Response"));
-            if (Regex.Match(response, "Response: Success", RegexOptions.IgnoreCase).Success)
-            {
-                subStrings = response.Split(new string[] { "Category-" }, StringSplitOptions.None);
-                tmpDialPlanContextsList = subStrings.OfType<string>().ToList();
-                tmpDialPlanContextsList.RemoveAt(0);
-                foreach (string context in tmpDialPlanContextsList)
-                {
-                    finalDialPlanContextsList.Add(context);
-                }
-                return finalDialPlanContextsList;
-
-            }
-            else if (Regex.Match(response, "Response: Error", RegexOptions.IgnoreCase).Success)
-            {
-                return finalDialPlanContextsList;
-            }
-        } while (bytesRead != 0);
-        return finalDialPlanContextsList;
-    }
-
-    public bool login(string ipAddress, string amiLogin, string amiPassword)
-    {
-        managerConnection = new ManagerConnection(ipAddress, PORT, amiLogin, amiPassword);
-        managerConnection.Login(30000);
-        if (managerConnection.IsConnected())
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
-
-    public void logoff()
-    {
-        managerConnection.Logoff();
-    }
-
-
-
+   
     public void test() {
         ManagerConnection mc = new ManagerConnection("158.196.244.214", 5038, "asterisk214", "asterisk214");
         mc.Login();

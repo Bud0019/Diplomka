@@ -14,6 +14,7 @@ using System.Data;
 
 public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
 {
+    
     protected void Page_Load(object sender, EventArgs e)
     {
        
@@ -39,7 +40,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
     }
 
     protected void Button_cancel_Click(object sender, EventArgs e)
-    {
+    {              
         closeEdit();
     }
 
@@ -51,120 +52,121 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
     protected void Button_confirm_Click(object sender, EventArgs e)
     {
         if (Page.IsValid)
-        {
+        {           
             TextBox_log.Text = string.Empty;
             TCPConnector tcp = new TCPConnector();
-            if (tcp.connect(TextBox_ipAddress.Text))
-            {
-                if (tcp.login(TextBox_login.Text, TextBox_password.Text))
+            if(tcp.login(TextBox_ipAddress.Text, TextBox_login.Text, TextBox_password.Text))
+            {               
+                AsteriskRoutingSystem.Asterisk asterisk = new AsteriskRoutingSystem.Asterisk();
+                asterisk.name_Asterisk = TextBox_name.Text;
+                asterisk.prefix_Asterisk = TextBox_prefix.Text;
+                asterisk.ip_address = TextBox_ipAddress.Text;
+                asterisk.login_AMI = TextBox_login.Text;
+                asterisk.password_AMI = EncryptAMIPassword(TextBox_password.Text.Trim());
+                asterisk.asterisk_owner = Membership.GetUser().UserName.ToString();
+
+                AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
+                List<AsteriskRoutingSystem.Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
+                List<string> asteriskNamesList = new List<string>();
+                foreach (AsteriskRoutingSystem.Asterisk asteriskName in asteriskList)
                 {
-                    AsteriskRoutingSystem.Asterisk asterisk = new AsteriskRoutingSystem.Asterisk();
-                    asterisk.name_Asterisk = TextBox_name.Text;
-                    asterisk.prefix_Asterisk = TextBox_prefix.Text;
-                    asterisk.ip_address = TextBox_ipAddress.Text;
-                    asterisk.login_AMI = TextBox_login.Text;
-                    asterisk.password_AMI = EncryptAMIPassword(TextBox_password.Text.Trim());
-                    asterisk.asterisk_owner = Membership.GetUser().UserName.ToString();
-                   
-                    AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
-                    List<AsteriskRoutingSystem.Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
-                    List<string> asteriskNamesList = new List<string>();
-                    foreach(AsteriskRoutingSystem.Asterisk asteriskName in asteriskList)
+                    asteriskNamesList.Add(asteriskName.name_Asterisk);
+                }
+                int returnCode;
+                if ((returnCode = asteriskAccessLayer.insertNewUniqueASterisk(asterisk)) == -1)
+                {
+                    if (asteriskList.Count > 0)
                     {
-                        asteriskNamesList.Add(asteriskName.name_Asterisk);
-                    }
-                    int returnCode;
-                    if ((returnCode = asteriskAccessLayer.insertNewUniqueASterisk(asterisk)) == -1)
-                    {                       
-                        if (asteriskList.Count > 0)
+                        TextBox_log.Text += "Pridávam k " + asterisk.name_Asterisk + "...\n";
+                        foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                         {
-                            TextBox_log.Text += "Pridávam k " + asterisk.name_Asterisk + "...\n";
-                            foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
+                            if (tcp.addTrunk(oneAsterisk.name_Asterisk, oneAsterisk.ip_address))
                             {
-                                if (tcp.addTrunk(oneAsterisk.name_Asterisk, oneAsterisk.ip_address)) {
-                                   tcp.addPrefix(oneAsterisk.name_Asterisk, oneAsterisk.prefix_Asterisk);
-                                    TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " OK.\n";
-                                }
-                                else
-                                    TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " zlyhalo!\n";
-                                //osetrit co v takom pripade 
+                                tcp.addPrefix(oneAsterisk.name_Asterisk, oneAsterisk.prefix_Asterisk);
+                                TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " OK.\n";
                             }
-                                                        
-                            tcp.createInitialContexts(asteriskNamesList);                          
-                            tcp.reloadModules();                          
-                            tcp.logout();
-                            tcp.disconnect();                            
-                            foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
-                            {
-                                TextBox_log.Text += "Pridávam k " + oneAsterisk.name_Asterisk + "...\n";
-                                if (tcp.connect(oneAsterisk.ip_address))
+                            else
+                                TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " zlyhalo!\n";
+                            //osetrit co v takom pripade 
+                        }
+
+                        tcp.createInitialContexts(asteriskNamesList);
+                        tcp.reloadModules();
+                        tcp.logoff();
+                        foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
+                        {
+                            TextBox_log.Text += "Pridávam k " + oneAsterisk.name_Asterisk + "...\n";                          
+                                if (tcp.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, DecryptAMIPassword(oneAsterisk.password_AMI)))
                                 {
-                                    if (tcp.login(oneAsterisk.login_AMI, DecryptAMIPassword(oneAsterisk.password_AMI)))
+                                    if (tcp.addTrunk(TextBox_name.Text, TextBox_ipAddress.Text))
                                     {
-                                        if (tcp.addTrunk(TextBox_name.Text, TextBox_ipAddress.Text))
-                                        {
-                                            tcp.addPrefix(TextBox_name.Text, TextBox_prefix.Text);
-                                            TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
-                                        }
-                                        else
-                                        {
-                                            TextBox_log.Text += "Pridanie " + TextBox_name.Text + " zlyhalo!\n";
-                                            //osetrit co v takom pripade 
-                                        }
+                                        tcp.addPrefix(TextBox_name.Text, TextBox_prefix.Text);
+                                        TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
                                     }
                                     else
                                     {
-                                        TextBox_log.Text += "Pripojenie k AMI " + oneAsterisk.name_Asterisk + " zlyhalo!\n";
+                                        TextBox_log.Text += "Pridanie " + TextBox_name.Text + " zlyhalo!\n";
                                         //osetrit co v takom pripade 
                                     }
                                 }
                                 else
                                 {
-                                    TextBox_log.Text += "Asterisk" + oneAsterisk.name_Asterisk + " je nedostupný!\n";
+                                    TextBox_log.Text += "Pripojenie k Asterisku " + oneAsterisk.name_Asterisk + " zlyhalo!\n";
                                     //osetrit co v takom pripade 
-                                }
-                                asteriskNamesList.Add(TextBox_name.Text);
-                                tcp.addToRemoteDialPlans(asteriskNamesList);
-                                tcp.reloadModules();
-                                tcp.logout();
-                                tcp.disconnect();
+                                }                                                    
+                            asteriskNamesList.Add(TextBox_name.Text);
+                            if (tcp.addToRemoteDialPlans(asteriskNamesList))
+                            {
+                                TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
                             }
+                            else
+                            {
+                                TextBox_log.Text += "Pridanie " + TextBox_name.Text + " zlyhalo!\n";
+                                //osetrit co v takom pripade 
+                            }
+                            tcp.reloadModules();
+                            tcp.logoff();                          
+                        }
+                    }
+                    else
+                    {
+                        if (tcp.createInitialContexts(asteriskNamesList)) { 
+                            TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";                           
                         }
                         else
                         {
-                            tcp.createInitialContexts(asteriskNamesList);                            
-                            TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
-                        }                                              
-                        GridView_Asterisks.DataBind();
+                            //co v takom pripade 
+                            TextBox_log.Text += "Pridanie " + TextBox_name.Text + " zlyhalo.\n";
+                        }
+                        tcp.reloadModules();
+                        tcp.logoff();
                     }
-                    else if (returnCode == 1)
-                    {
-                        TextBox_log.Text += "Asterisk " + asterisk.name_Asterisk + " existuje.\n";
-                    }
-                    else if (returnCode == 2)
-                    {
-                        TextBox_log.Text += "Asterisk s IP:" + asterisk.ip_address + " existuje.\n";
-                    }
-                    else if (returnCode == 3)
-                    {
-                        TextBox_log.Text += "Prefix " + asterisk.prefix_Asterisk + " existuje.\n";
-                    }
+                    GridView_Asterisks.DataBind();
                 }
-                else
+                else if (returnCode == 1)
                 {
-                    TextBox_log.Text += "Pripojenie k AMI " + TextBox_name.Text + " zlyhalo!\n";
+                    TextBox_log.Text += "Asterisk " + asterisk.name_Asterisk + " existuje.\n";
                 }
-                tcp.disconnect();
+                else if (returnCode == 2)
+                {
+                    TextBox_log.Text += "Asterisk s IP:" + asterisk.ip_address + " existuje.\n";
+                }
+                else if (returnCode == 3)
+                {
+                    TextBox_log.Text += "Prefix " + asterisk.prefix_Asterisk + " existuje.\n";
+                }
             }
             else
             {
-                TextBox_log.Text += "Pripojenie na socket " + TextBox_name.Text + " zlyhalo!\n";
-            }
+                TextBox_log.Text += "Pripojenie k Asterisku " + TextBox_login.Text + " zlyhalo!\n";
+            }          
         }
     }
 
     protected void Button_delete_Click(object sender, EventArgs e)
     {
+
+        /*
         TextBox_log.Text = string.Empty;
         TCPConnector tcp = new TCPConnector();
         AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
@@ -257,11 +259,11 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         }
         TextBox_log.Text = sbDeletedAsterisk.ToString() + sbRemoteAsterisk.ToString();
         GridView_Asterisks.DataBind();
-        closeEdit();
+        closeEdit();*/
     }
 
     protected void Button_edit_Click(object sender, EventArgs e)
-    {
+    {/*
         if (Page.IsValid)
         {
             TextBox_log.Text = string.Empty;
@@ -357,7 +359,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
             {
                 TextBox_log.Text += "Pripojenie na socket " + TextBox_name.Text + " zlyhalo!\n";
             }
-        }
+        }*/
     }
 
     private void closeEdit()

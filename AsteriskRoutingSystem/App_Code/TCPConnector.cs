@@ -260,6 +260,27 @@ public class TCPConnector
         return true;
     }
 
+    public List<string> getUsersByAsterisk(string asteriskID)
+    {
+        List<string> usersByAsteriskList = new List<string>();
+        managerResponse = managerConnection.SendAction(new GetConfigAction("sip.conf"));
+        if (managerResponse.IsSuccess())
+        {
+            GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;
+            foreach (int key in responseConfig.Categories.Keys)
+            {
+                string sipCategory = responseConfig.Categories[key];
+                if (sipCategory.Length == 9 && sipCategory.All(char.IsDigit))
+                {
+                    usersByAsteriskList.Add(sipCategory);
+                }                            
+            }
+            return usersByAsteriskList;         
+        }
+        else
+            return usersByAsteriskList;
+    }
+
     private string createPrefix(string prefix)
     {
         string tmpStr = "XXXXXXXXX";

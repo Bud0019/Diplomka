@@ -22,7 +22,7 @@
             <div id="menuDiv">
                 <asp:LinkButton ID="LinkButton_Home" runat="server" PostBackUrl="~/LoggedUserSite/User_page.aspx">Úvod</asp:LinkButton>
                 <asp:LinkButton ID="LinkButton_Asterisks" runat="server" PostBackUrl="~/LoggedUserSite/AsterisksManagment_page.aspx">Správa Asteriskov</asp:LinkButton>
-                <asp:LinkButton ID="LinkButton_Trunks" runat="server" PostBackUrl="~/LoggedUserSite/TrunkManagment_page.aspx">Správa Smerovania</asp:LinkButton>
+                <asp:LinkButton ID="LinkButton_Trunks" runat="server" PostBackUrl="~/LoggedUserSite/UserTransfer_page.aspx">Prenos užívateľa</asp:LinkButton>
             </div>
             <div id="contentDiv">
                 <div id="actionDiv">

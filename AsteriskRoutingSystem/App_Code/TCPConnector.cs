@@ -26,7 +26,7 @@ public class TCPConnector
     public bool login(string ipAddress, string amiLogin, string amiPassword)
     {
         managerConnection = new ManagerConnection(ipAddress, PORT, amiLogin, amiPassword);
-        managerConnection.Login(30000);
+        managerConnection.Login(15000);
         if (managerConnection.IsConnected())
         {
             return true;
@@ -260,7 +260,7 @@ public class TCPConnector
         return true;
     }
 
-    public List<string> getUsersByAsterisk(string asteriskID)
+    public List<string> getUsersByAsterisk(string asteriskName)
     {
         List<string> usersByAsteriskList = new List<string>();
         managerResponse = managerConnection.SendAction(new GetConfigAction("sip.conf"));

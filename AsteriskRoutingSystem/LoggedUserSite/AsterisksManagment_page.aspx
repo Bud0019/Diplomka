@@ -77,6 +77,13 @@
         <br />
     <asp:TextBox ID="TextBox_password" runat="server" TextMode="Password" ValidationGroup="vg_addAsterisk"></asp:TextBox>
     <asp:RequiredFieldValidator ID="RequiredFieldValidator_password" runat="server" ControlToValidate="TextBox_password" ErrorMessage="Musíte zadať heslo." Display="Dynamic" ForeColor="#CC0000" ValidationGroup="vg_addAsterisk"></asp:RequiredFieldValidator>
+        <br />
+        <asp:Label ID="Label_TLS" runat="server" Text="Povoliť TLS:"></asp:Label>
+        <asp:CheckBox ID="CheckBox_TLS" runat="server" />
+        <br />
+        <asp:Label ID="Label_certificate" runat="server" Text="Umiestnenie certifikátu:"></asp:Label>
+        <br />
+        <asp:TextBox ID="TextBox1" runat="server"></asp:TextBox>
     <br />
         
     <asp:Button ID="Button_confirm" runat="server" Text="Pridať" ValidationGroup="vg_addAsterisk" OnClick="Button_confirm_Click" />

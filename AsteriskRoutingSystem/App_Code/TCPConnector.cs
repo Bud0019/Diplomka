@@ -14,15 +14,14 @@ using AsterNET.Manager.Event;
 using AsterNET.FastAGI.MappingStrategies;
 using System.Security.Cryptography;
 
-public class TCPConnector
+public class TCPConnector : Utils
 {
 
     private const int PORT = 5038;
 
     private ManagerConnection managerConnection;
     private ManagerResponse managerResponse;
-
-
+                   
     public bool login(string ipAddress, string amiLogin, string amiPassword)
     {
         managerConnection = new ManagerConnection(ipAddress, PORT, amiLogin, amiPassword);

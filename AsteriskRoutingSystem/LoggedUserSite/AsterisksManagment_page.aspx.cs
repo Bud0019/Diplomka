@@ -14,10 +14,10 @@ using System.Data;
 
 public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
 {
-    
+    TCPConnector tcp = new TCPConnector();
+
     protected void Page_Load(object sender, EventArgs e)
-    {
-       
+    {      
         if (!IsPostBack)
         {
             Session["loggedUser"] = Membership.GetUser().UserName.ToString();
@@ -53,8 +53,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
     {
         if (Page.IsValid)
         {           
-            TextBox_log.Text = string.Empty;
-            TCPConnector tcp = new TCPConnector();
+            TextBox_log.Text = string.Empty;            
             if(tcp.login(TextBox_ipAddress.Text, TextBox_login.Text, TextBox_password.Text))
             {               
                 AsteriskRoutingSystem.Asterisk asterisk = new AsteriskRoutingSystem.Asterisk();
@@ -62,7 +61,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                 asterisk.prefix_Asterisk = TextBox_prefix.Text;
                 asterisk.ip_address = TextBox_ipAddress.Text;
                 asterisk.login_AMI = TextBox_login.Text;
-                asterisk.password_AMI = EncryptAMIPassword(TextBox_password.Text.Trim());
+                asterisk.password_AMI = tcp.EncryptAMIPassword(TextBox_password.Text.Trim());
                 asterisk.asterisk_owner = Membership.GetUser().UserName.ToString();
 
                 AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
@@ -96,7 +95,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                         {
                             TextBox_log.Text += "Pridávam k " + oneAsterisk.name_Asterisk + "...\n";                          
-                                if (tcp.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, DecryptAMIPassword(oneAsterisk.password_AMI)))
+                                if (tcp.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, tcp.DecryptAMIPassword(oneAsterisk.password_AMI)))
                                 {
                                     if (tcp.addTrunk(TextBox_name.Text, TextBox_ipAddress.Text))
                                     {
@@ -167,7 +166,6 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
     {
 
         TextBox_log.Text = string.Empty;
-        TCPConnector tcp = new TCPConnector();
         AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
         List<AsteriskRoutingSystem.Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
         List<string> asteriskNamesList = new List<string>();
@@ -181,7 +179,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         {
             if (asterisk.id_Asterisk == int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()))
             {               
-                    if (tcp.login(asterisk.ip_address, asterisk.login_AMI, DecryptAMIPassword(asterisk.password_AMI)))
+                    if (tcp.login(asterisk.ip_address, asterisk.login_AMI, tcp.DecryptAMIPassword(asterisk.password_AMI)))
                     {
                         if (asteriskList.Count > 1)
                             sbDeletedAsterisk.Append("Odstraňujem z: " + asterisk.name_Asterisk + "...\n");
@@ -215,7 +213,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
             }
             else
             {                
-                    if (tcp.login(asterisk.ip_address, asterisk.login_AMI, DecryptAMIPassword(asterisk.password_AMI)))
+                    if (tcp.login(asterisk.ip_address, asterisk.login_AMI, tcp.DecryptAMIPassword(asterisk.password_AMI)))
                     {
                         sbRemoteAsterisk.Append("Odstraňujem z: " + asterisk.name_Asterisk + "...\n");
                         if (tcp.deleteTrunk(GridView_Asterisks.SelectedRow.Cells[1].Text))
@@ -245,8 +243,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
     {
         if (Page.IsValid)
         {
-            TextBox_log.Text = string.Empty;
-            TCPConnector tcp = new TCPConnector();           
+            TextBox_log.Text = string.Empty;                      
                 if (tcp.login(TextBox_ipAddress.Text, TextBox_login.Text, TextBox_password.Text))
                 {
                     StringBuilder sbUpdatedAsterisk = new StringBuilder();
@@ -258,7 +255,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     asterisk.prefix_Asterisk = TextBox_prefix.Text;
                     asterisk.ip_address = TextBox_ipAddress.Text;
                     asterisk.login_AMI = TextBox_login.Text;
-                    asterisk.password_AMI = EncryptAMIPassword(TextBox_password.Text.Trim());
+                    asterisk.password_AMI = tcp.EncryptAMIPassword(TextBox_password.Text.Trim());
                     asterisk.asterisk_owner = Membership.GetUser().UserName.ToString();
 
                     AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
@@ -276,7 +273,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                 {
                                     TextBox_log.Text += "Upravujem v " + oneAsterisk.name_Asterisk + "...\n";
                                    
-                                        if (tcp.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, DecryptAMIPassword(oneAsterisk.password_AMI)))
+                                        if (tcp.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, tcp.DecryptAMIPassword(oneAsterisk.password_AMI)))
                                         {
                                             if (tcp.updateTrunk(GridView_Asterisks.SelectedRow.Cells[1].Text, asterisk.name_Asterisk, asterisk.ip_address))
                                             {
@@ -338,49 +335,5 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         TextBox_ipAddress.Text = "";
         TextBox_login.Text = "";
         TextBox_password.Text = "";
-    }
-
-    private string EncryptAMIPassword(string clearText)
-    {
-        string EncryptionKey = "MAKV2SPBNI99212";
-        byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
-        using (Aes encryptor = Aes.Create())
-        {
-            Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
-            encryptor.Key = pdb.GetBytes(32);
-            encryptor.IV = pdb.GetBytes(16);
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateEncryptor(), CryptoStreamMode.Write))
-                {
-                    cs.Write(clearBytes, 0, clearBytes.Length);
-                    cs.Close();
-                }
-                clearText = Convert.ToBase64String(ms.ToArray());
-            }
-        }
-        return clearText;
-    }
-
-    private string DecryptAMIPassword(string cipherText)
-    {
-        string EncryptionKey = "MAKV2SPBNI99212";
-        byte[] cipherBytes = Convert.FromBase64String(cipherText);
-        using (Aes encryptor = Aes.Create())
-        {
-            Rfc2898DeriveBytes pdb = new Rfc2898DeriveBytes(EncryptionKey, new byte[] { 0x49, 0x76, 0x61, 0x6e, 0x20, 0x4d, 0x65, 0x64, 0x76, 0x65, 0x64, 0x65, 0x76 });
-            encryptor.Key = pdb.GetBytes(32);
-            encryptor.IV = pdb.GetBytes(16);
-            using (MemoryStream ms = new MemoryStream())
-            {
-                using (CryptoStream cs = new CryptoStream(ms, encryptor.CreateDecryptor(), CryptoStreamMode.Write))
-                {
-                    cs.Write(cipherBytes, 0, cipherBytes.Length);
-                    cs.Close();
-                }
-                cipherText = Encoding.Unicode.GetString(ms.ToArray());
-            }
-        }
-        return cipherText;
-    }
+    }    
 }

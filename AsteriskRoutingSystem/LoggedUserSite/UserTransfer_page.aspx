@@ -26,7 +26,7 @@
             <asp:SessionParameter Name="userName" SessionField="loggedUser" Type="String" />
         </SelectParameters>
     </asp:ObjectDataSource>
-    <asp:GridView ID="GridView_userTransfer" runat="server" AllowPaging="True" AutoGenerateColumns="False" CellPadding="4" ForeColor="#333333" GridLines="None" PageSize="8" ShowFooter="True" ShowHeaderWhenEmpty="True" Width="451px" OnPageIndexChanging="GridView_userTransfer_PageIndexChanging">
+    <asp:GridView ID="GridView_userTransfer" runat="server" AllowPaging="True" AutoGenerateColumns="False" CellPadding="4" ForeColor="#333333" GridLines="None" PageSize="8" ShowFooter="True" ShowHeaderWhenEmpty="True" Width="456px" OnPageIndexChanging="GridView_userTransfer_PageIndexChanging">
          <AlternatingRowStyle BackColor="White" />
          <Columns>
                 <asp:CommandField ShowSelectButton="true" SelectText="Vybrať"/>

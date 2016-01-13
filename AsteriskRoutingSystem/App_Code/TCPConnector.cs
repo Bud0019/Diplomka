@@ -119,7 +119,11 @@ public class TCPConnector : Utils
     }
   
     public bool createInitialContexts(List<string> asteriskNameList)
-    {        
+    {
+        UpdateConfigAction createTransferedContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        createTransferedContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, "transfered");
+        managerResponse = managerConnection.SendAction(createTransferedContextUpdateConfig);
+        
         managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
         UpdateConfigAction addToExtensionsUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
         if (managerResponse.IsSuccess())
@@ -155,6 +159,7 @@ public class TCPConnector : Utils
 
     public bool addToRemoteDialPlans(List<string> asteriskNamesList)
     {
+       
         managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
         UpdateConfigAction addToRemoteDialPlansUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
         if (managerResponse.IsSuccess())
@@ -193,7 +198,7 @@ public class TCPConnector : Utils
     public bool deleteAllRemoteContexts(List<string> asteriskNamesList)
     {
         UpdateConfigAction deleteRemoteContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
-        deleteRemoteContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, "remote");
+        deleteRemoteContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, "remote");       
         managerResponse = managerConnection.SendAction(deleteRemoteContextUpdateConfig);
         if (!managerResponse.IsSuccess())
         {
@@ -278,6 +283,80 @@ public class TCPConnector : Utils
         }
         else
             return usersByAsteriskList;
+    }
+    
+    public bool userTransfer(string prefix, List<string>prefixDetails)
+    {
+       
+        UpdateConfigAction userTransferUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", true);
+        userTransferUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, prefix);    
+        foreach (string item in prefixDetails)
+        {
+            if (item.StartsWith("context"))
+            {
+                userTransferUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, prefix, "context", "transfered");
+            }
+            else
+            {
+                string [] items = item.Split('=');
+                userTransferUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, prefix, items[0], items[1]);
+            }                    
+        }
+        managerResponse = managerConnection.SendAction(userTransferUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public bool addTransferedToDialPlan(string prefix)
+    {
+        UpdateConfigAction addTotransferedUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        addTotransferedUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "transfered", "exten", "_" + prefix + ",n,Dial(SIP/${{EXTEN}})");
+        managerResponse = managerConnection.SendAction(addTotransferedUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        return true;
+    }
+ 
+    public bool deleteTransferedFromOriginal(string prefix)
+    {
+        UpdateConfigAction deletetransferedUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", true);
+        deletetransferedUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, prefix);
+        managerResponse = managerConnection.SendAction(deletetransferedUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public List<string>getUserDetail(string prefix)
+    {
+        List<string> usersDetailList = new List<string>();
+        managerResponse = managerConnection.SendAction(new GetConfigAction("sip.conf"));
+        if (managerResponse.IsSuccess())
+        {
+            GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;
+            foreach (int key in responseConfig.Categories.Keys)
+            {
+                string sipCategory = responseConfig.Categories[key];
+                if (sipCategory.Equals(prefix))
+                {
+                    foreach (int keyLine in responseConfig.Lines(key).Keys)
+                    {
+                      usersDetailList.Add(responseConfig.Lines(key)[keyLine]);
+                    }
+                    break;
+                }
+            }
+            return usersDetailList;
+        }
+        else
+            return usersDetailList;
     }
 
     private string createPrefix(string prefix)

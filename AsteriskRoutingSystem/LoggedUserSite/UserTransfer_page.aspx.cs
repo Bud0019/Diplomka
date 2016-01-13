@@ -27,7 +27,20 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
         }
         set { this.ViewState["usersList"] = value; }
     }
-    
+
+    public List<string> usersDetailList
+    {
+        get
+        {
+            if (this.ViewState["usersDetailList"] == null)
+            {
+                this.ViewState["usersDetailList"] = new List<string>();
+            }
+            return (List<string>)(this.ViewState["usersDetailList"]);
+        }
+        set { this.ViewState["usersDetailList"] = value; }
+    }
+
 
     protected void Page_Load(object sender, EventArgs e)
     {       
@@ -53,7 +66,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                         GridView_userTransfer.Visible = true;
                         GridView_userTransfer.DataBind();
                         GridView_userTransfer.PageIndex = 0;
-                        tcp.logoff();                                             
+                        tcp.logoff();
                     }
                     else
                     {
@@ -86,14 +99,48 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
         {
             Label_notSelected.Visible = false;
             if (Page.IsValid)
-            {
+            {               
                 foreach (AsteriskRoutingSystem.Asterisk asterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
                 {
                     if (asterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue))
                     {
                         if (tcp.login(asterisk.ip_address, asterisk.login_AMI, tcp.DecryptAMIPassword(asterisk.password_AMI)))
                         {
-                            
+                            if(tcp.userTransfer(GridView_userTransfer.SelectedRow.Cells[1].Text, usersDetailList))
+                            {
+                                if (tcp.addTransferedToDialPlan(GridView_userTransfer.SelectedRow.Cells[1].Text))
+                                {
+                                    tcp.logoff();
+                                    foreach (AsteriskRoutingSystem.Asterisk asteriskFrom in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
+                                    {
+                                        if (asteriskFrom.name_Asterisk.Equals(DropDownList_from.SelectedValue))
+                                        {
+                                            if (tcp.login(asteriskFrom.ip_address, asteriskFrom.login_AMI, tcp.DecryptAMIPassword(asteriskFrom.password_AMI)))
+                                            {
+                                                if (tcp.deleteTransferedFromOriginal(GridView_userTransfer.SelectedRow.Cells[1].Text))
+                                                {
+                                                    //uspesny transfer
+                                                    //databind
+                                                }
+                                                tcp.logoff();
+                                            }
+                                            else
+                                            {
+                                                //nepodarilo sa pripojit k asterisku a zobrazit users
+                                            }
+                                            break;
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    //nepodarilo sa vytvorit zaznam v dialplane
+                                }
+                            }
+                            else
+                            {
+                                //nepodarilo sa preniest uzivatela
+                            }
                         }
                         else
                         {
@@ -103,5 +150,25 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                 }
             }
         }        
-    }   
+    }
+
+    protected void GridView_userTransfer_SelectedIndexChanged(object sender, EventArgs e)
+    {
+        foreach (AsteriskRoutingSystem.Asterisk asterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
+        {
+            if (asterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
+            {
+                if (tcp.login(asterisk.ip_address, asterisk.login_AMI, tcp.DecryptAMIPassword(asterisk.password_AMI)))
+                {
+                    usersDetailList = tcp.getUserDetail(GridView_userTransfer.SelectedRow.Cells[1].Text);
+                    tcp.logoff();
+                }
+                else
+                {
+                    //nepodarilo sa pripojit k asterisku a zobrazit users
+                }
+            }
+        }
+        
+    }
 }

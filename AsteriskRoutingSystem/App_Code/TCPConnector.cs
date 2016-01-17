@@ -21,6 +21,7 @@ public class TCPConnector : Utils
 
     private ManagerConnection managerConnection;
     private ManagerResponse managerResponse;
+    public string originalContext;
                    
     public bool login(string ipAddress, string amiLogin, string amiPassword)
     {
@@ -55,7 +56,6 @@ public class TCPConnector : Utils
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, trunkName);
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "host", hostIP);
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "type", "peer");
-        addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "secret", "AsteriskRoutingSystem");
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "context", "remote");
         managerResponse = managerConnection.SendAction(addTrunkUpdateConfig);
         if (managerResponse.IsSuccess())
@@ -105,7 +105,7 @@ public class TCPConnector : Utils
         UpdateConfigAction addPrefixUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
         addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, contextName);
         addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",1,NoOp()");
-        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${{EXTEN}}@" + contextName + ")");
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${EXTEN}@" + contextName + ")");
         addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,HangUp()");
         managerResponse = managerConnection.SendAction(addPrefixUpdateConfig);
         if (managerResponse.IsSuccess())
@@ -119,11 +119,7 @@ public class TCPConnector : Utils
     }
   
     public bool createInitialContexts(List<string> asteriskNameList)
-    {
-        UpdateConfigAction createTransferedContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
-        createTransferedContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, "transfered");
-        managerResponse = managerConnection.SendAction(createTransferedContextUpdateConfig);
-        
+    {            
         managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
         UpdateConfigAction addToExtensionsUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
         if (managerResponse.IsSuccess())
@@ -254,7 +250,7 @@ public class TCPConnector : Utils
         updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, oldContextName);
         updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, newContextName);
         updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newContextName, "exten", "_" + createdPrefix + ",1,NoOp()");
-        updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newContextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${{EXTEN}}@" + newContextName + ")");
+        updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newContextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${EXTEN}@" + newContextName + ")");
         updateDialPlansUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newContextName, "exten", "_" + createdPrefix + ",n,HangUp()");
         managerResponse = managerConnection.SendAction(updateDialPlansUpdateConfig);
         if (!managerResponse.IsSuccess())
@@ -292,13 +288,14 @@ public class TCPConnector : Utils
         userTransferUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, prefix);    
         foreach (string item in prefixDetails)
         {
+            string[] items = item.Split('=');
             if (item.StartsWith("context"))
             {
-                userTransferUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, prefix, "context", "transfered");
+                originalContext = items[1];       
+                userTransferUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, prefix, "context", "remote");
             }
             else
-            {
-                string [] items = item.Split('=');
+            {               
                 userTransferUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, prefix, items[0], items[1]);
             }                    
         }
@@ -306,32 +303,68 @@ public class TCPConnector : Utils
         if (!managerResponse.IsSuccess())
         {
             return false;
-        }
+        }     
         return true;
     }
 
-    public bool addTransferedToDialPlan(string prefix)
+    public bool deleteFromOriginal(string prefix)
     {
-        UpdateConfigAction addTotransferedUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
-        addTotransferedUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "transfered", "exten", "_" + prefix + ",n,Dial(SIP/${{EXTEN}})");
-        managerResponse = managerConnection.SendAction(addTotransferedUpdateConfig);
+        UpdateConfigAction deleteContextUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", true);
+        deleteContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT,prefix);
+        managerResponse = managerConnection.SendAction(deleteContextUpdateConfig);
         if (!managerResponse.IsSuccess())
         {
             return false;
         }
-        return true;
+        else
+        {
+            return true;
+        }
+    }
+
+    public bool firstTransferUser(string prefix, string remoteTrunkContext)
+    {
+        UpdateConfigAction addToContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        addToContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, remoteTrunkContext, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN})");
+        managerResponse = managerConnection.SendAction(addToContextUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public bool changeInOriginal(string prefix, string originalContext, string currentAsterisk)
+    {
+        UpdateConfigAction addToOriginalContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        addToOriginalContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, originalContext, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")");
+        managerResponse = managerConnection.SendAction(addToOriginalContextUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
     }
  
-    public bool deleteTransferedFromOriginal(string prefix)
+    public bool addToOthersDialPlan(string prefix, string currentAsterisk, string originalAsterisk)
     {
-        UpdateConfigAction deletetransferedUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", true);
-        deletetransferedUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, prefix);
-        managerResponse = managerConnection.SendAction(deletetransferedUpdateConfig);
+        UpdateConfigAction addToOthersContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        addToOthersContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, originalAsterisk, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")");
+        managerResponse = managerConnection.SendAction(addToOthersContextUpdateConfig);
         if (!managerResponse.IsSuccess())
         {
             return false;
         }
-        return true;
+        else
+        {
+            return true;
+        }
     }
 
     public List<string>getUserDetail(string prefix)

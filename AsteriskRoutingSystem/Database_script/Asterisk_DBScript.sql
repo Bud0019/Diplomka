@@ -12,6 +12,13 @@ password_AMI nvarchar(256) not null,
 asterisk_owner uniqueidentifier foreign key references dbo.aspnet_Users(UserId),
 )
 
+create table transferedUser(
+transferedUser nvarchar(9) primary key,
+originalContext nvarchar(20),
+originalAsterisk nvarchar(20),
+currentAsterisk nvarchar(20)
+)
+
 alter proc insertUniqueAsterisk
 @name_asterisk nvarchar(20),
 @prefix_Asterisk nvarchar(10),
@@ -134,8 +141,8 @@ delete from Asterisks where id_Asterisk = 126
 delete from Trunks
 drop table Asterisks
 delete from dbo.aspnet_Users
-delete from dbo.aspnet_Membership
-select count(name_Asterisk) from Asterisks where name_Asterisk = 'asterisk214'
+delete from transferedUser
+select * from transferedUser
 
 update Asterisks
 set prefix_Asterisk = '1'

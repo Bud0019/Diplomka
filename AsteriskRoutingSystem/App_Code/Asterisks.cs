@@ -19,6 +19,14 @@ namespace AsteriskRoutingSystem
         public string asterisk_owner { get; set; }
     }
 
+    public class TransferedUser
+    {
+        public string transferedUser { get; set; }
+        public string originalContext { get; set; }
+        public string originalAsterisk { get; set; }
+        public string currentAsterisk { get; set; }
+    }
+
     public class AsteriskAccessLayer
     {
         private string CS = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
@@ -56,15 +64,15 @@ namespace AsteriskRoutingSystem
                 updateCmd.Parameters.AddWithValue("@password_AMI", asterisk.password_AMI);
                 connection.Open();
                 string returnCode = (string)updateCmd.ExecuteScalar();
-                           
-                    if (returnCode.Contains(asterisk.name_Asterisk))
-                        return 1;
-                    else if (returnCode.Contains(asterisk.ip_address))
-                        return 2;
-                    else if (returnCode.Contains(asterisk.prefix_Asterisk))
-                        return 3;                           
-                    else
-                        return -1;
+
+                if (returnCode.Contains(asterisk.name_Asterisk))
+                    return 1;
+                else if (returnCode.Contains(asterisk.ip_address))
+                    return 2;
+                else if (returnCode.Contains(asterisk.prefix_Asterisk))
+                    return 3;
+                else
+                    return -1;
             };
         }
 
@@ -76,7 +84,7 @@ namespace AsteriskRoutingSystem
                 selectAsteriskByUserCmd.Parameters.AddWithValue("@userName", userName);
                 SqlDataAdapter sda = new SqlDataAdapter(selectAsteriskByUserCmd);
                 DataSet ds = new DataSet();
-                connection.Open();               
+                connection.Open();
                 sda.Fill(ds);
                 selectAsteriskByUserCmd.ExecuteNonQuery();
                 return ds;
@@ -90,10 +98,78 @@ namespace AsteriskRoutingSystem
                 SqlCommand deleteAsteriskCmd = new SqlCommand("delete from Asterisks where id_Asterisk = @id_Asterisk", connection);
                 deleteAsteriskCmd.Parameters.AddWithValue("@id_Asterisk", id_Asterisk);
                 SqlDataAdapter sda = new SqlDataAdapter(deleteAsteriskCmd);
-                connection.Open();              
-                deleteAsteriskCmd.ExecuteNonQuery();                
+                connection.Open();
+                deleteAsteriskCmd.ExecuteNonQuery();
             };
         }
+
+        public void insertTransferedUser(TransferedUser user)
+        {
+            using (SqlConnection connection = new SqlConnection(CS))
+            {
+                SqlCommand insertTransferedUserCmd = new SqlCommand("insert into transferedUser(transferedUser, originalContext, originalAsterisk, currentAsterisk)" +
+                    "values(@transferedUser, @originalContext, @originalAsterisk, @currentAsterisk)", connection);
+                insertTransferedUserCmd.Parameters.AddWithValue("@transferedUser", user.transferedUser);
+                insertTransferedUserCmd.Parameters.AddWithValue("@originalContext", user.originalContext);
+                insertTransferedUserCmd.Parameters.AddWithValue("@originalAsterisk", user.originalAsterisk);
+                insertTransferedUserCmd.Parameters.AddWithValue("@currentAsterisk", user.currentAsterisk);
+                SqlDataAdapter sda = new SqlDataAdapter(insertTransferedUserCmd);
+                connection.Open();
+                insertTransferedUserCmd.ExecuteNonQuery();
+            };
+        }
+
+        public void updateTransferedUser(string user, string newCurrentAsterisk)
+        {
+            using (SqlConnection connection = new SqlConnection(CS))
+            {
+                SqlCommand updateTransferedUserCmd = new SqlCommand("update transferedUser set currentAsterisk = @newCurrentAsterisk where transferedUser = @user", connection);
+                updateTransferedUserCmd.Parameters.AddWithValue("@newCurrentAsterisk", newCurrentAsterisk);
+                updateTransferedUserCmd.Parameters.AddWithValue("@user", user);
+                SqlDataAdapter sda = new SqlDataAdapter(updateTransferedUserCmd);
+                connection.Open();
+                updateTransferedUserCmd.ExecuteNonQuery();
+            };
+        }
+
+        public List<TransferedUser> selectTransferedUser(string user)
+        {
+            List<TransferedUser> list = new List<TransferedUser>();
+            DataSet ds = new DataSet();
+            using (SqlConnection connection = new SqlConnection(CS))
+            {
+                SqlCommand selectTransferedUserCmd = new SqlCommand("select * from transferedUser where transferedUser = @user", connection);
+                selectTransferedUserCmd.Parameters.AddWithValue("@user", user);
+                SqlDataAdapter sda = new SqlDataAdapter(selectTransferedUserCmd);
+                connection.Open();
+                sda.Fill(ds);
+                selectTransferedUserCmd.ExecuteNonQuery();
+            };
+            DataTable dt = ds.Tables[0];
+            foreach (DataRow item in ds.Tables[0].Rows)
+            {
+                TransferedUser transferedUser = new TransferedUser();
+                transferedUser.transferedUser = item["transferedUser"].ToString();
+                transferedUser.originalContext = item["originalContext"].ToString();
+                transferedUser.originalAsterisk = item["originalAsterisk"].ToString();
+                transferedUser.currentAsterisk = item["currentAsterisk"].ToString();
+                list.Add(transferedUser);
+            }
+            return list;
+        }
+
+        public void deleteTransferedUser(string user)
+        {
+            using (SqlConnection connection = new SqlConnection(CS))
+            {
+                SqlCommand deleteTransferedUserCmd = new SqlCommand("delete from transferedUser where transferedUser = @user", connection);
+                deleteTransferedUserCmd.Parameters.AddWithValue("@user", user);
+                SqlDataAdapter sda = new SqlDataAdapter(deleteTransferedUserCmd);
+                connection.Open();
+                deleteTransferedUserCmd.ExecuteNonQuery();
+            };
+        }
+
 
         public List<Asterisk> getAsterisksInList(string userName)
         {

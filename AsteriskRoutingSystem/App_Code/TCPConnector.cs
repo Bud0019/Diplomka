@@ -367,6 +367,66 @@ public class TCPConnector : Utils
         }
     }
 
+    public bool returnBackToOriginal(string prefix, string originalContext, string currentAsterisk)
+    {
+        UpdateConfigAction returnBackUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        returnBackUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, originalContext, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")");
+        managerResponse = managerConnection.SendAction(returnBackUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public bool returnOriginalContext(string prefix, string originalContext)
+    {
+        UpdateConfigAction returnOriginalContextUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", true);
+        returnOriginalContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, prefix, "context", originalContext, "remote");
+        managerResponse = managerConnection.SendAction(returnOriginalContextUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public bool deleteTransferFromRemote(string prefix, string originalAsterisk)
+    {
+        UpdateConfigAction deleteFromRemoteUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        deleteFromRemoteUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, originalAsterisk, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN})", "_" + prefix + ",1,Dial(SIP/${EXTEN})");
+        managerResponse = managerConnection.SendAction(deleteFromRemoteUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public bool deleteFromOthers(string prefix, string originalAsterisk, string currentAsterisk)
+    {
+        UpdateConfigAction deleteFromOthersUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        deleteFromOthersUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, originalAsterisk, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")");
+        managerResponse = managerConnection.SendAction(deleteFromOthersUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
     public List<string>getUserDetail(string prefix)
     {
         List<string> usersDetailList = new List<string>();

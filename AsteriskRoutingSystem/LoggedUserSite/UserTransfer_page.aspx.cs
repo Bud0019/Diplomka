@@ -207,10 +207,55 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                         //nepodarilo sa preniest uzivatela
                                     }
                                 }
-                                else if (asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(1).originalAsterisk.Equals(DropDownList_to.SelectedValue))
+                                else if (asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(0).originalAsterisk.Equals(DropDownList_to.SelectedValue))
                                 {
-                                    asteriskAccessLayer.deleteTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text);
-                                    //logika pri prenose spat na povodny asterisk
+                                    TransferedUser tu = asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(0);
+                                    if (tcp.returnBackToOriginal(tu.transferedUser, tu.originalContext, tu.currentAsterisk) &&  tcp.returnOriginalContext(tu.transferedUser, tu.originalContext))
+                                    {
+                                        tcp.logoff();
+                                        if(tcp.login(fromAddress, amiLogin, amiPswd))
+                                        {
+                                            if (tcp.deleteTransferFromRemote(tu.transferedUser, tu.originalAsterisk) && tcp.deleteFromOriginal(tu.transferedUser))
+                                            {
+                                                foreach (AsteriskRoutingSystem.Asterisk otherAsterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
+                                                {
+                                                    if (!asterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || asterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
+                                                    {
+                                                        if (tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI)))
+                                                        {
+                                                            if (tcp.deleteFromOthers(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk))
+                                                            {
+                                                                //pridanie k dialplanu ostatnych asteriskov
+                                                            }
+                                                            else
+                                                            {
+                                                                //chyba
+                                                            }
+                                                            tcp.logoff();
+                                                        }
+                                                        else
+                                                        {
+                                                            //chyba
+                                                        }
+                                                    }
+                                                }
+                                                asteriskAccessLayer.deleteTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text);                                                                                                                                  
+                                            }
+                                            else
+                                            {
+                                                //chyba
+                                            }
+                                        }
+                                        else
+                                        {
+                                            //chyba
+                                        }
+                                       
+                                    }
+                                    else
+                                    {
+                                        //chyba
+                                    }                                                                                
                                 }
                                 else
                                 {

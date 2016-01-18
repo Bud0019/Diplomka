@@ -427,6 +427,66 @@ public class TCPConnector : Utils
         }
     }
 
+    public bool updateTransferUser(string prefix, string originalAsterisk, string currentAsterisk)
+    {
+        UpdateConfigAction updateTranseredsUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        updateTranseredsUpdateConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, originalAsterisk, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN})", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")");
+        managerResponse = managerConnection.SendAction(updateTranseredsUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public bool updateInCurrent(string prefix, string originalAsterisk, string currentAsterisk)
+    {
+        UpdateConfigAction updateInCurrentUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        updateInCurrentUpdateConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, originalAsterisk, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")",  "_" + prefix + ",1,Dial(SIP/${EXTEN})");
+        managerResponse = managerConnection.SendAction(updateInCurrentUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public bool updateInOriginal(string prefix, string originalContext, string currentAsterisk, string newCurrentAsterisk)
+    {
+        UpdateConfigAction updateInOriginalUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        updateInOriginalUpdateConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, originalContext, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + newCurrentAsterisk + ")", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")");
+        managerResponse = managerConnection.SendAction(updateInOriginalUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public bool updateInOthers(string prefix, string originalAsterisk, string currentAsterisk, string newCurrentAsterisk)
+    {
+        UpdateConfigAction updateInOthersUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", true);
+        updateInOthersUpdateConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, originalAsterisk, "exten", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + newCurrentAsterisk + ")", "_" + prefix + ",1,Dial(SIP/${EXTEN}@" + currentAsterisk + ")");
+        managerResponse = managerConnection.SendAction(updateInOthersUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
     public List<string>getUserDetail(string prefix)
     {
         List<string> usersDetailList = new List<string>();

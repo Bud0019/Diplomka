@@ -171,7 +171,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                                 tcp.logoff();
                                                 foreach (AsteriskRoutingSystem.Asterisk otherAsterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
                                                 {
-                                                    if (!asterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || asterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
+                                                    if (!otherAsterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || otherAsterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
                                                     {  
                                                         if(tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI)))
                                                         {
@@ -219,7 +219,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                             {
                                                 foreach (AsteriskRoutingSystem.Asterisk otherAsterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
                                                 {
-                                                    if (!asterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || asterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
+                                                    if (!otherAsterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || otherAsterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
                                                     {
                                                         if (tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI)))
                                                         {
@@ -259,6 +259,56 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                 }
                                 else
                                 {
+                                    TransferedUser tu = asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(0);
+                                    if(tcp.updateTransferUser(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk))
+                                    {
+                                        tcp.logoff();
+                                        if(tcp.login(fromAddress, amiLogin, amiPswd))
+                                        {
+                                            if(tcp.updateInCurrent(tu.transferedUser, tu.originalAsterisk, DropDownList_to.SelectedValue) && tcp.deleteFromOriginal(tu.transferedUser))
+                                            {
+                                                tcp.logoff();
+                                                foreach (AsteriskRoutingSystem.Asterisk otherAsterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
+                                                {
+                                                    if (!otherAsterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || !otherAsterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
+                                                    {
+                                                        if (tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI))) { 
+                                                            if (otherAsterisk.name_Asterisk.Equals(tu.originalAsterisk))
+                                                            {
+                                                                if (tcp.updateInOriginal(tu.transferedUser, tu.originalContext, tu.currentAsterisk, DropDownList_to.SelectedValue))
+                                                                {
+
+                                                                }
+                                                            }
+                                                            else
+                                                            {
+                                                                if(tcp.updateInOthers(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, DropDownList_to.SelectedValue)){
+
+                                                                }
+                                                            }
+                                                        }
+
+                                                    }
+                                                    else 
+                                                    {
+
+                                                    }
+                                                }
+                                            }
+                                            else
+                                            {
+                                                //chyba
+                                            }
+                                        }
+                                        else
+                                        {
+                                            //chyba
+                                        }
+                                    }
+                                    else
+                                    {
+                                        //chyba
+                                    }
                                     asteriskAccessLayer.updateTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text, DropDownList_to.SelectedValue);
                                     //logika pri prenose 
                                 }                           

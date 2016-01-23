@@ -107,8 +107,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                     if(tcp.login(asterisk.ip_address, asterisk.login_AMI, tcp.DecryptAMIPassword(asterisk.password_AMI)))
                     {
                         usersList = tcp.getUsersByAsterisk(asterisk.name_Asterisk);
-                        GridView_userTransfer.DataSource = usersList.Select(l => new { user_number = l }).ToList();
-                        GridView_userTransfer.Visible = true;
+                        GridView_userTransfer.DataSource = usersList.Select(l => new { user_number = l }).ToList();                        
                         GridView_userTransfer.DataBind();
                         GridView_userTransfer.PageIndex = 0;
                         tcp.logoff();
@@ -125,6 +124,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
             GridView_userTransfer.Visible = false;           
         }      
     }
+
 
     protected void GridView_userTransfer_PageIndexChanging(object sender, GridViewPageEventArgs e)
     {
@@ -151,23 +151,26 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                     {
                         if (tcp.login(asterisk.ip_address, asterisk.login_AMI, tcp.DecryptAMIPassword(asterisk.password_AMI)))
                         {
-                            if(tcp.userTransfer(GridView_userTransfer.SelectedRow.Cells[1].Text, usersDetailList))
+                            if(tcp.relocateUser(GridView_userTransfer.SelectedRow.Cells[1].Text, usersDetailList))
                             {
-                                TransferedUser transferedUser = new TransferedUser();
-                                transferedUser.transferedUser = GridView_userTransfer.SelectedRow.Cells[1].Text;
-                                transferedUser.originalContext = tcp.originalContext;
-                                transferedUser.originalAsterisk = DropDownList_from.SelectedValue;
-                                transferedUser.currentAsterisk = DropDownList_to.SelectedValue;
+                                TransferedUser user = new TransferedUser();
+                                user.transferedUser = GridView_userTransfer.SelectedRow.Cells[1].Text;
+                                user.originalContext = tcp.originalContext;
+                                user.originalAsterisk = DropDownList_from.SelectedValue;
+                                user.currentAsterisk = DropDownList_to.SelectedValue;
                                 if(asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).Count == 0)
                                 {
-                                    asteriskAccessLayer.insertTransferedUser(transferedUser);
-                                    if(tcp.firstTransferUser(transferedUser.transferedUser, transferedUser.originalAsterisk))
-                                    {
+                                    asteriskAccessLayer.insertTransferedUser(user);
+                                   // if(tcp.addToTrunkContextOnOriginal(transferedUser.transferedUser, transferedUser.originalAsterisk))
+                                      if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.addToTrunkContextOnOriginal, user.transferedUser, user.originalAsterisk,null,null,null))
+                                      {
                                         tcp.logoff();
                                         if(tcp.login(fromAddress, amiLogin, amiPswd))
                                         {
-                                            if (tcp.changeInOriginal(transferedUser.transferedUser, transferedUser.originalContext, transferedUser.currentAsterisk) && tcp.deleteFromOriginal(transferedUser.transferedUser))
+                                            //if (tcp.addToOriginalContext(transferedUser.transferedUser, transferedUser.originalContext, transferedUser.currentAsterisk) && tcp.deleteFromOriginal(transferedUser.transferedUser))
+                                            if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.addToOriginalContext, user.transferedUser, null, user.currentAsterisk, user.originalContext, null) && tcp.deleteFromOriginal(user.transferedUser))
                                             {
+                                                usersList = tcp.getUsersByAsterisk(asterisk.name_Asterisk);
                                                 tcp.logoff();
                                                 foreach (AsteriskRoutingSystem.Asterisk otherAsterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
                                                 {
@@ -175,9 +178,11 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                                     {  
                                                         if(tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI)))
                                                         {
-                                                            if(tcp.addToOthersDialPlan(transferedUser.transferedUser, transferedUser.currentAsterisk, transferedUser.originalAsterisk))
+                                                            //if(tcp.addToOthersAsteriskDialPlans(user.transferedUser, user.currentAsterisk, user.originalAsterisk))
+                                                            if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.addToOthersAsteriskDialPlans, user.transferedUser, user.originalAsterisk, user.currentAsterisk, null, null))
                                                             {
                                                                 //pridanie k dialplanu ostatnych asteriskov
+                                                               
                                                             }
                                                             else
                                                             {
@@ -190,7 +195,9 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                                             //chyba
                                                         }
                                                     }
-                                                }
+                                                }                                               
+                                                GridView_userTransfer.DataSource = usersList.Select(l => new { user_number = l }).ToList();
+                                                GridView_userTransfer.DataBind();
                                             }
                                             else
                                             {
@@ -210,22 +217,28 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                 else if (asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(0).originalAsterisk.Equals(DropDownList_to.SelectedValue))
                                 {
                                     TransferedUser tu = asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(0);
-                                    if (tcp.returnBackToOriginal(tu.transferedUser, tu.originalContext, tu.currentAsterisk) &&  tcp.returnOriginalContext(tu.transferedUser, tu.originalContext))
-                                    {
+                                    //if (tcp.deleteInOriginalContext(tu.transferedUser, tu.originalContext, tu.currentAsterisk) &&  tcp.returnOriginalContext(tu.transferedUser, tu.originalContext))
+                                    if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.deleteInOriginalContext, tu.transferedUser, null, tu.currentAsterisk, tu.originalContext, null) && tcp.returnOriginalContext(tu.transferedUser, tu.originalContext))
+                                    {                                       
                                         tcp.logoff();
                                         if(tcp.login(fromAddress, amiLogin, amiPswd))
                                         {
-                                            if (tcp.deleteTransferFromRemote(tu.transferedUser, tu.originalAsterisk) && tcp.deleteFromOriginal(tu.transferedUser))
-                                            {
+                                           // if (tcp.deleteFromSourceAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk) && tcp.deleteFromOriginal(tu.transferedUser))
+                                                if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.deleteFromSourceAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, null, null, null) && tcp.deleteFromOriginal(tu.transferedUser))
+                                                {
+                                                usersList = tcp.getUsersByAsterisk(asterisk.name_Asterisk);
+                                                tcp.logoff();
                                                 foreach (AsteriskRoutingSystem.Asterisk otherAsterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
                                                 {
-                                                    if (!otherAsterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || otherAsterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
+                                                    if (!otherAsterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || !otherAsterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
                                                     {
                                                         if (tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI)))
                                                         {
-                                                            if (tcp.deleteFromOthers(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk))
+                                                            //if (tcp.deleteFromRestAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk))
+                                                            if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.deleteFromRestAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, null, null))
                                                             {
                                                                 //pridanie k dialplanu ostatnych asteriskov
+                                                                
                                                             }
                                                             else
                                                             {
@@ -239,7 +252,10 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                                         }
                                                     }
                                                 }
-                                                asteriskAccessLayer.deleteTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text);                                                                                                                                  
+                                                
+                                                GridView_userTransfer.DataSource = usersList.Select(l => new { user_number = l }).ToList();
+                                                GridView_userTransfer.DataBind();
+                                                asteriskAccessLayer.deleteTransferedUser(tu.transferedUser);                                                                                                                                  
                                             }
                                             else
                                             {
@@ -260,30 +276,37 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                 else
                                 {
                                     TransferedUser tu = asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(0);
-                                    if(tcp.updateTransferUser(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk))
-                                    {
+                                    //if(tcp.updateInCurrentAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk))
+                                      if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.updateDialPlanInDestinationAsterisk, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk,null,null))
+                                      {
+                                        
                                         tcp.logoff();
                                         if(tcp.login(fromAddress, amiLogin, amiPswd))
                                         {
-                                            if(tcp.updateInCurrent(tu.transferedUser, tu.originalAsterisk, DropDownList_to.SelectedValue) && tcp.deleteFromOriginal(tu.transferedUser))
+                                            //if(tcp.updateInCurrentAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk, DropDownList_to.SelectedValue) && tcp.deleteFromOriginal(tu.transferedUser))
+                                            if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.updateInCurrentAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, DropDownList_to.SelectedValue, null, null) && tcp.deleteFromOriginal(tu.transferedUser))
                                             {
+                                                usersList = tcp.getUsersByAsterisk(asterisk.name_Asterisk);
                                                 tcp.logoff();
                                                 foreach (AsteriskRoutingSystem.Asterisk otherAsterisk in asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString()))
                                                 {
-                                                    if (!otherAsterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue) || !otherAsterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue))
+                                                    if (otherAsterisk.name_Asterisk.Equals(DropDownList_to.SelectedValue)==false || otherAsterisk.name_Asterisk.Equals(DropDownList_from.SelectedValue)==false)
                                                     {
                                                         if (tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI))) { 
                                                             if (otherAsterisk.name_Asterisk.Equals(tu.originalAsterisk))
                                                             {
-                                                                if (tcp.updateInOriginal(tu.transferedUser, tu.originalContext, tu.currentAsterisk, DropDownList_to.SelectedValue))
+                                                                //if (tcp.updateInOriginalAsteriskDialPlan(tu.transferedUser, tu.originalContext, tu.currentAsterisk, DropDownList_to.SelectedValue))
+                                                                if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.updateInOriginalAsteriskDialPlan, tu.transferedUser, null, tu.currentAsterisk, tu.originalContext, DropDownList_to.SelectedValue))
                                                                 {
 
                                                                 }
                                                             }
                                                             else
                                                             {
-                                                                if(tcp.updateInOthers(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, DropDownList_to.SelectedValue)){
-
+                                                                //if(tcp.updateInRestAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, DropDownList_to.SelectedValue))
+                                                                if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.updateInRestAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, null, DropDownList_to.SelectedValue))
+                                                                {
+                                                                    
                                                                 }
                                                             }
                                                         }
@@ -294,6 +317,9 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
 
                                                     }
                                                 }
+                                                asteriskAccessLayer.updateTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text, DropDownList_to.SelectedValue);
+                                                GridView_userTransfer.DataSource = usersList.Select(l => new { user_number = l }).ToList();
+                                                GridView_userTransfer.DataBind();
                                             }
                                             else
                                             {
@@ -309,7 +335,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                     {
                                         //chyba
                                     }
-                                    asteriskAccessLayer.updateTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text, DropDownList_to.SelectedValue);
+                                   
                                     //logika pri prenose 
                                 }                           
                             }

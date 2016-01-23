@@ -10,6 +10,8 @@ ip_address nvarchar(50) not null unique,
 login_AMI nvarchar(20) not null,
 password_AMI nvarchar(256) not null,
 asterisk_owner uniqueidentifier foreign key references dbo.aspnet_Users(UserId),
+tls_enabled int,
+tls_certDestination nvarchar(50)
 )
 
 create table transferedUser(
@@ -25,7 +27,9 @@ alter proc insertUniqueAsterisk
 @ip_address nvarchar(20),
 @login_AMI nvarchar(20),
 @password_AMI nvarchar(256),
-@asterisk_owner nvarchar(256)
+@asterisk_owner nvarchar(256),
+@tls_enabled int,
+@tls_certDestination nvarchar(50)
 as
 Begin
 	declare @countName int
@@ -55,8 +59,8 @@ Begin
 		end
 	else
 	begin	
-		INSERT INTO Asterisks(name_Asterisk, prefix_Asterisk, ip_address, login_AMI, password_AMI, asterisk_owner)
-                    values(@name_Asterisk, @prefix_Asterisk, @ip_address, @login_AMI, @password_AMI, (SELECT UserId FROM dbo.aspnet_Users WHERE UserName = @asterisk_owner))
+		INSERT INTO Asterisks(name_Asterisk, prefix_Asterisk, ip_address, login_AMI, password_AMI, asterisk_owner, tls_enabled, tls_certDestination)
+                    values(@name_Asterisk, @prefix_Asterisk, @ip_address, @login_AMI, @password_AMI, (SELECT UserId FROM dbo.aspnet_Users WHERE UserName = @asterisk_owner), @tls_enabled, @tls_certDestination)
 		select -1 as ReturnCode
 	end
 End
@@ -67,12 +71,15 @@ alter proc updateAsterisk
 @prefix_Asterisk nvarchar(10),
 @ip_address nvarchar(20),
 @login_AMI nvarchar(20),
-@password_AMI nvarchar(256)
+@password_AMI nvarchar(256),
+@tls_enabled int,
+@tls_certDestination nvarchar(50)
 as
 Begin	
 	begin try
 		UPDATE Asterisks 
-		SET name_Asterisk = @name_asterisk, prefix_Asterisk = @prefix_Asterisk, ip_address = @ip_address, login_AMI = @login_AMI, password_AMI = @password_AMI
+		SET name_Asterisk = @name_asterisk, prefix_Asterisk = @prefix_Asterisk, ip_address = @ip_address, login_AMI = @login_AMI, password_AMI = @password_AMI,
+		tls_enabled = @tls_enabled, tls_certDestination = @tls_certDestination
 		WHERE id_Asterisk = @id_Asterisk 
 		select 'OK' as ReturnCode
 	end try
@@ -81,61 +88,6 @@ Begin
 	end catch
 End
 
-
-
-alter proc insertUniqueTrunkByAsterisk
-@trunk_name nvarchar(30),
-@host_ip nvarchar(50),
-@context_name nvarchar(30),
-@id_Asterisk int
-as
-Begin
-	declare @countTrunkName int
-	declare @countHostIP int
-
-	Select @countTrunkName = COUNT(trunk_name), @countHostIP = COUNT(host_ip) from Trunks
-	where [id_Asterisk] = @id_Asterisk and [trunk_name] = @trunk_name or [host_ip] = @host_ip
-
-	if(@countTrunkName > 1 or @countHostIP > 1)
-	begin
-		select 1 as ReturnCode
-	end
-	else
-	begin	
-		INSERT INTO Trunks(trunk_name, host_ip, context_name, id_Asterisk)
-                    values(@trunk_name, @host_ip, @context_name, @id_Asterisk)
-		select -1 as ReturnCode
-	end
-End
-
-alter proc updateTrunk
-@id_trunk int,
-@trunk_name nvarchar(30),
-@host_ip nvarchar(50),
-@context_name nvarchar(30),
-@id_Asterisk int
-as
-Begin
-	declare @countTrunkName int
-
-	Select @countTrunkName = COUNT(trunk_name) from Trunks
-	where [id_Asterisk] = @id_Asterisk and [trunk_name] = @trunk_name 
-
-	if(@countTrunkName > 1)
-	begin
-		select 1 as ReturnCode
-	end
-	else
-	begin	
-		UPDATE Trunks 
-		SET trunk_name = @trunk_name, host_ip = @host_ip, context_name = @context_name
-		WHERE id_trunk = @id_trunk 
-		select -1 as ReturnCode
-	end
-End
-
-
-
 select * from Asterisks 
 delete from Asterisks where id_Asterisk = 126 
 delete from Trunks
@@ -143,6 +95,8 @@ drop table Asterisks
 delete from dbo.aspnet_Users
 delete from transferedUser
 select * from transferedUser
+
+update transferedUser set currentAsterisk = 'asterisk225' where transferedUser = '222221111'
 
 update Asterisks
 set prefix_Asterisk = '1'

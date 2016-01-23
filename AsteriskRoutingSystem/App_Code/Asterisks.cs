@@ -17,6 +17,8 @@ namespace AsteriskRoutingSystem
         public string login_AMI { get; set; }
         public string password_AMI { get; set; }
         public string asterisk_owner { get; set; }
+        public int tls_enabled { get; set; }
+        public string tls_certDestination { get; set; }
     }
 
     public class TransferedUser
@@ -44,6 +46,8 @@ namespace AsteriskRoutingSystem
                 insertCmd.Parameters.AddWithValue("@login_AMI", asterisk.login_AMI);
                 insertCmd.Parameters.AddWithValue("@password_AMI", asterisk.password_AMI);
                 insertCmd.Parameters.AddWithValue("@asterisk_owner", asterisk.asterisk_owner);
+                insertCmd.Parameters.AddWithValue("@tls_enabled", asterisk.tls_enabled);
+                insertCmd.Parameters.AddWithValue("@tls_certDestination", asterisk.tls_certDestination);
                 connection.Open();
                 int returnCode = (int)insertCmd.ExecuteScalar();
                 return returnCode;
@@ -62,6 +66,8 @@ namespace AsteriskRoutingSystem
                 updateCmd.Parameters.AddWithValue("@ip_address", asterisk.ip_address);
                 updateCmd.Parameters.AddWithValue("@login_AMI", asterisk.login_AMI);
                 updateCmd.Parameters.AddWithValue("@password_AMI", asterisk.password_AMI);
+                updateCmd.Parameters.AddWithValue("@tls_enabled", asterisk.tls_enabled);
+                updateCmd.Parameters.AddWithValue("@tls_certDestination", asterisk.tls_certDestination);
                 connection.Open();
                 string returnCode = (string)updateCmd.ExecuteScalar();
 
@@ -186,6 +192,8 @@ namespace AsteriskRoutingSystem
                 asterisk.prefix_Asterisk = item["prefix_Asterisk"].ToString();
                 asterisk.login_AMI = item["login_AMI"].ToString();
                 asterisk.password_AMI = item["password_AMI"].ToString();
+                asterisk.tls_enabled = int.Parse(item["tls_enabled"].ToString());
+                asterisk.password_AMI = item["tls_certDestination"].ToString();
                 list.Add(asterisk);
             }
             return list;

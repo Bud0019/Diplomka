@@ -30,7 +30,15 @@
                 <asp:BoundField 
                     DataField="login_AMI"
                     HeaderText="AMI login"
-                    />             
+                    /> 
+                <asp:BoundField 
+                    DataField="tls_enabled"
+                    HeaderText="tls"                   
+                    /> 
+                <asp:BoundField 
+                    DataField="tls_certDestination"
+                    HeaderText="certDestination"                   
+                    />           
             </Columns>
             <EditRowStyle BackColor="#2461BF" />
             <FooterStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" />
@@ -83,7 +91,7 @@
         <br />
         <asp:Label ID="Label_certificate" runat="server" Text="Umiestnenie certifikátu:"></asp:Label>
         <br />
-        <asp:TextBox ID="TextBox1" runat="server"></asp:TextBox>
+        <asp:TextBox ID="TextBox_certDestination" runat="server"></asp:TextBox>
     <br />
         
     <asp:Button ID="Button_confirm" runat="server" Text="Pridať" ValidationGroup="vg_addAsterisk" OnClick="Button_confirm_Click" />

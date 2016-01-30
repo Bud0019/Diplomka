@@ -64,7 +64,7 @@ public class TCPConnector : Utils
         managerResponse = managerConnection.SendAction(reloadExtensionsConf);
     }
 
-    public bool addTrunk(string trunkName, string hostIP, int tlsEnabled, string certDestination)
+    public bool addTrunk(string trunkName, string hostIP, int tlsEnabled)
     {
         UpdateConfigAction addTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, trunkName);
@@ -72,9 +72,7 @@ public class TCPConnector : Utils
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "type", "peer");
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "context", "remote");
         if (tlsEnabled==1) {
-            addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "transport", "tls");
-            addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlsenable", "yes");
-            addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscerfile", certDestination);
+            addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "transport", "tls");           
         }
         managerResponse = managerConnection.SendAction(addTrunkUpdateConfig);
         if (managerResponse.IsSuccess())
@@ -154,8 +152,17 @@ public class TCPConnector : Utils
         }
     }
   
-    public bool createInitialContexts(List<string> asteriskNameList)
-    {            
+    public bool createInitialContexts(List<string> asteriskNameList, int tlsEnabled, string certDestination)
+    {          
+        if(tlsEnabled == 1)
+        {
+            UpdateConfigAction addTlsEnableUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", true);
+            addTlsEnableUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlsenable", "tls");
+            addTlsEnableUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscerfile", certDestination);
+            managerResponse = managerConnection.SendAction(addTlsEnableUpdateConfig);
+            if (!managerResponse.IsSuccess())
+                return false;        
+        }  
         managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
         UpdateConfigAction addToExtensionsUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
         if (managerResponse.IsSuccess())

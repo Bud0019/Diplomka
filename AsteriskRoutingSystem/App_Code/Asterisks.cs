@@ -193,7 +193,7 @@ namespace AsteriskRoutingSystem
                 asterisk.login_AMI = item["login_AMI"].ToString();
                 asterisk.password_AMI = item["password_AMI"].ToString();
                 asterisk.tls_enabled = int.Parse(item["tls_enabled"].ToString());
-                asterisk.password_AMI = item["tls_certDestination"].ToString();
+                asterisk.tls_certDestination = item["tls_certDestination"].ToString();
                 list.Add(asterisk);
             }
             return list;

@@ -11,7 +11,7 @@
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContentPlaceHolder" Runat="Server">
     <div id="AsteriskManagmentDiv">  
     <asp:Label ID="Label_AsteriskManagment" runat="server" Text="Správa Asteriskov" Font-Bold="True"></asp:Label>
-        <asp:GridView ID="GridView_Asterisks" runat="server" AllowPaging="True" AutoGenerateColumns="False" CellPadding="4" OnSelectedIndexChanged="OnSelectedIndexChanged" DataSourceID="Asterisk_ObjectDataSource" ForeColor="#333333" GridLines="None" ShowHeaderWhenEmpty="True" DataKeyNames="id_Asterisk" PageSize="8">
+        <asp:GridView ID="GridView_Asterisks" runat="server" AllowPaging="True" AutoGenerateColumns="False" CellPadding="4" OnSelectedIndexChanged="OnSelectedIndexChanged" DataSourceID="Asterisk_ObjectDataSource" ForeColor="#333333" GridLines="None" ShowHeaderWhenEmpty="True" DataKeyNames="id_Asterisk, tls_certDestination" PageSize="8" Width="423px">
             <AlternatingRowStyle BackColor="White" />
             <Columns>
                 <asp:CommandField ShowSelectButton="true" SelectText="Upraviť"/>
@@ -34,11 +34,12 @@
                 <asp:BoundField 
                     DataField="tls_enabled"
                     HeaderText="tls"                   
-                    /> 
+                    />  
                 <asp:BoundField 
                     DataField="tls_certDestination"
-                    HeaderText="certDestination"                   
-                    />           
+                    HeaderText="certDestination"
+                    Visible ="false"                   
+                    />                 
             </Columns>
             <EditRowStyle BackColor="#2461BF" />
             <FooterStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" />
@@ -108,7 +109,7 @@
     <div id="logDiv">
         <asp:label runat="server" text="Log:" ID="Label_log" Font-Bold="True"></asp:label>
         <br />
-        <asp:textbox runat="server" ID="TextBox_log" Height="218px" TextMode="MultiLine" Width="342px"></asp:textbox>
+        <asp:textbox runat="server" ID="TextBox_log" Height="273px" TextMode="MultiLine" Width="319px"></asp:textbox>
         <br />
         <asp:button runat="server" text="Vyčistiť" ID="button_clear" OnClick="button_clear_Click" />
     </div>

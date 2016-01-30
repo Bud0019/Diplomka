@@ -52,10 +52,10 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         TextBox_prefix.Text = row.Cells[2].Text;
         TextBox_ipAddress.Text = row.Cells[3].Text;
         TextBox_login.Text = row.Cells[4].Text;
-        TextBox_password.Text = "";      
+        TextBox_password.Text = "";
         currentTLSStatus = int.Parse(GridView_Asterisks.SelectedRow.Cells[5].Text);
         CheckBox_TLS.Checked = (currentTLSStatus == 1) ? true : false;
-        TextBox_certDestination.Text = GridView_Asterisks.SelectedRow.Cells[6].Text;    
+        TextBox_certDestination.Text = GridView_Asterisks.SelectedDataKey["tls_certDestination"].ToString();   
     }
 
     protected void Button_cancel_Click(object sender, EventArgs e)
@@ -100,7 +100,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                         TextBox_log.Text += "Pridávam k " + asterisk.name_Asterisk + "...\n";
                         foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                         {
-                            if (tcp.addTrunk(oneAsterisk.name_Asterisk, oneAsterisk.ip_address, oneAsterisk.tls_enabled, oneAsterisk.tls_certDestination))
+                            if (tcp.addTrunk(oneAsterisk.name_Asterisk, oneAsterisk.ip_address, oneAsterisk.tls_enabled))
                             {
                                 tcp.addPrefix(oneAsterisk.name_Asterisk, oneAsterisk.prefix_Asterisk);
                                 TextBox_log.Text += "Pridanie " + oneAsterisk.name_Asterisk + " OK.\n";
@@ -110,16 +110,15 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                             //osetrit co v takom pripade 
                         }
 
-                        tcp.createInitialContexts(asteriskNamesList);
+                        tcp.createInitialContexts(asteriskNamesList, asterisk.tls_enabled, asterisk.tls_certDestination);
                         tcp.reloadModules();
                         tcp.logoff();
                         foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                         {
                             TextBox_log.Text += "Pridávam k " + oneAsterisk.name_Asterisk + "...\n";                          
                                 if (tcp.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, tcp.DecryptAMIPassword(oneAsterisk.password_AMI)))
-                                {
-                                int isChecked = (CheckBox_TLS.Checked) ? 1 : 0;
-                                    if (tcp.addTrunk(TextBox_name.Text, TextBox_ipAddress.Text, isChecked, TextBox_certDestination.Text))
+                                {                               
+                                    if (tcp.addTrunk(TextBox_name.Text, TextBox_ipAddress.Text, asterisk.tls_enabled))
                                     {
                                         tcp.addPrefix(TextBox_name.Text, TextBox_prefix.Text);
                                         TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";
@@ -151,7 +150,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     }
                     else
                     {
-                        if (tcp.createInitialContexts(asteriskNamesList)) { 
+                        if (tcp.createInitialContexts(asteriskNamesList, asterisk.tls_enabled, asterisk.tls_certDestination)) { 
                             TextBox_log.Text += "Pridanie " + TextBox_name.Text + " OK.\n";                           
                         }
                         else
@@ -280,13 +279,17 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     asterisk.login_AMI = TextBox_login.Text;
                     asterisk.password_AMI = tcp.EncryptAMIPassword(TextBox_password.Text.Trim());
                     asterisk.asterisk_owner = Membership.GetUser().UserName.ToString();
+                    asterisk.tls_enabled = (CheckBox_TLS.Checked) ? 1 : 0;
+                    asterisk.tls_certDestination = TextBox_certDestination.Text;
+                
 
                     AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
                     List<AsteriskRoutingSystem.Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
                     int returnCode;
                     if ((returnCode = asteriskAccessLayer.updateAsterisk(asterisk)) == -1)
                     {
-                        if (asteriskList.Count > 1)
+                    //dopisat update do globals
+                    if (asteriskList.Count > 1)
                         {
                             foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                             {
@@ -297,9 +300,8 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                                     TextBox_log.Text += "Upravujem v " + oneAsterisk.name_Asterisk + "...\n";
                                    
                                         if (tcp.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, tcp.DecryptAMIPassword(oneAsterisk.password_AMI)))
-                                        {
-                                            int isChecked = (CheckBox_TLS.Checked) ? 1 : 0;
-                                            if (tcp.updateTrunk(GridView_Asterisks.SelectedRow.Cells[1].Text, asterisk.name_Asterisk, asterisk.ip_address, asterisk.tls_enabled, asterisk.tls_certDestination, isChecked))
+                                        {                                       
+                                            if (tcp.updateTrunk(GridView_Asterisks.SelectedRow.Cells[1].Text, asterisk.name_Asterisk, asterisk.ip_address, int.Parse(GridView_Asterisks.SelectedRow.Cells[5].Text), asterisk.tls_certDestination, asterisk.tls_enabled))
                                             {
                                                 TextBox_log.Text += "Upravovanie " + TextBox_name.Text + " OK.\n";
                                             }

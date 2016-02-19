@@ -14,7 +14,7 @@ using AsterNET.Manager.Event;
 using AsterNET.FastAGI.MappingStrategies;
 using System.Security.Cryptography;
 
-public class TCPConnector : Utils
+public class AMIConnector : Utils
 {
 
     private const int PORT = 5038;
@@ -64,6 +64,33 @@ public class TCPConnector : Utils
         managerResponse = managerConnection.SendAction(reloadExtensionsConf);
     }
 
+    public bool addTrunk(List<AsteriskRoutingSystem.Asterisk> asteriskList, int idAdded)
+    {
+        UpdateConfigAction addTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);    
+        foreach(AsteriskRoutingSystem.Asterisk asterisk in asteriskList)
+            {
+            if (asterisk.id_Asterisk != idAdded) { 
+                addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, asterisk.name_Asterisk);
+                addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "host", asterisk.ip_address);
+                addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "type", "peer");
+                addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "context", "remote");
+                if (asterisk.tls_enabled == 1)
+                {
+                    addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "transport", "tls");
+                }
+            }
+        }                    
+        managerResponse = managerConnection.SendAction(addTrunkUpdateConfig);
+        if (managerResponse.IsSuccess())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     public bool addTrunk(string trunkName, string hostIP, int tlsEnabled)
     {
         UpdateConfigAction addTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
@@ -71,8 +98,9 @@ public class TCPConnector : Utils
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "host", hostIP);
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "type", "peer");
         addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "context", "remote");
-        if (tlsEnabled==1) {
-            addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "transport", "tls");           
+        if (tlsEnabled == 1)
+        {
+            addTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "transport", "tls");
         }
         managerResponse = managerConnection.SendAction(addTrunkUpdateConfig);
         if (managerResponse.IsSuccess())
@@ -85,11 +113,29 @@ public class TCPConnector : Utils
         }
     }
 
-    public bool deleteTrunk(string trunkName, int tlsEnabled, string certDestination)
+    public bool deleteTrunk(string trunkName)
     {
         UpdateConfigAction deleteTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
-        deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, trunkName);
-        if(tlsEnabled==1)
+        deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, trunkName);       
+        managerResponse = managerConnection.SendAction(deleteTrunkUpdateConfig);
+        if (managerResponse.IsSuccess())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public bool deleteTrunk(List<AsteriskRoutingSystem.Asterisk> asteriskList, int idDeleted, bool tlsEnable, string certDestination)
+    {
+        UpdateConfigAction deleteTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
+        foreach(AsteriskRoutingSystem.Asterisk asterisk in asteriskList) {
+            if (asterisk.id_Asterisk != idDeleted) 
+                deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, asterisk.name_Asterisk);           
+        }
+        if (tlsEnable)
         {
             deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlsenable", "tls", "tls");
             deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlscertfile", certDestination, certDestination);
@@ -105,23 +151,12 @@ public class TCPConnector : Utils
         }
     }
 
-    public bool updateTrunk(string oldTrunkName, string newTrunkName, string hostIP, int tlsEnabled, string certDestination, int currentTLSstatus)
+    public bool updateTrunk(string oldTrunkName, string newTrunkName, string hostIP)
     {
         UpdateConfigAction updateTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
         updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_RENAMECAT, oldTrunkName,null,newTrunkName);
         updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, newTrunkName, "host", hostIP);
-        if (tlsEnabled == 1 && currentTLSstatus == 0)
-        {
-            updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newTrunkName, "transport", "tls");
-            updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlsenable", "tls");
-            updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscerfile", certDestination);
-        }
-        else if(currentTLSstatus == 1 && tlsEnabled == 0)
-        {
-            updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, newTrunkName, "transport", "tls", "tls");
-            updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlsenable", "tls", "tls");
-            updateTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlscerfile", certDestination, certDestination);
-        }
+        
         managerResponse = managerConnection.SendAction(updateTrunkUpdateConfig);
         if (managerResponse.IsSuccess())
         {
@@ -133,14 +168,68 @@ public class TCPConnector : Utils
         }
     }
 
-    public bool addPrefix(string contextName, string prefix)
+    public bool updateTLS(int tlsEnabled, string certDestination, int currentTLSstatus, bool isFirst, List<AsteriskRoutingSystem.Asterisk> asteriskList, string updatedAsterisk)
     {
-        string createdPrefix = createPrefix(prefix);
+        UpdateConfigAction updateTLSUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
+        if (tlsEnabled == 1 && currentTLSstatus == 0)
+        {          
+            updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlsenable", "tls");
+            updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscerfile", certDestination);
+            if (!isFirst)
+            {
+                foreach(AsteriskRoutingSystem.Asterisk asterisk in asteriskList)
+                {
+                    if(!asterisk.name_Asterisk.Equals(updatedAsterisk))
+                        updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "transport", "tls");
+                }
+            }
+            managerResponse = managerConnection.SendAction(updateTLSUpdateConfig);
+            if (managerResponse.IsSuccess())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        else if (currentTLSstatus == 1 && tlsEnabled == 0)
+        {      
+            updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlsenable", "tls", "tls");
+            updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlscerfile", certDestination, certDestination);
+            if (!isFirst)
+            {
+                foreach (AsteriskRoutingSystem.Asterisk asterisk in asteriskList)
+                {
+                    if (!asterisk.name_Asterisk.Equals(updatedAsterisk))
+                        updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, asterisk.name_Asterisk, "transport", "tls", "tls");
+                }
+            }
+            managerResponse = managerConnection.SendAction(updateTLSUpdateConfig);
+            if (managerResponse.IsSuccess())
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public bool addPrefix(List<AsteriskRoutingSystem.Asterisk> asteriskList, int idAdded)
+    {
         UpdateConfigAction addPrefixUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
-        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, contextName);
-        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",1,NoOp()");
-        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${EXTEN}@" + contextName + ")");
-        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,HangUp()");
+        foreach(AsteriskRoutingSystem.Asterisk asterisk in asteriskList) { 
+            if(idAdded != asterisk.id_Asterisk) {         
+                string createdPrefix = createPrefix(asterisk.prefix_Asterisk);       
+                addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, asterisk.name_Asterisk);
+                addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "exten", "_" + createdPrefix + ",1,NoOp()");
+                addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "exten", "_" + createdPrefix + ",n,Dial(SIP/${EXTEN}@" + asterisk.name_Asterisk + ")");
+                addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "exten", "_" + createdPrefix + ",n,HangUp()");
+            }
+        }
         managerResponse = managerConnection.SendAction(addPrefixUpdateConfig);
         if (managerResponse.IsSuccess())
         {
@@ -151,7 +240,30 @@ public class TCPConnector : Utils
             return false;
         }
     }
-  
+
+    public bool addPrefix(string contextName, string prefix, bool isRollback)
+    {
+        string createdPrefix = createPrefix(prefix);
+        UpdateConfigAction addPrefixUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, contextName);
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",1,NoOp()");
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${EXTEN}@" + contextName + ")");
+        addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,HangUp()");
+        if (isRollback)
+        {
+            addPrefixUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "remote", "include", contextName);
+        }
+        managerResponse = managerConnection.SendAction(addPrefixUpdateConfig);
+        if (managerResponse.IsSuccess())
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
     public bool createInitialContexts(List<string> asteriskNameList, int tlsEnabled, string certDestination)
     {          
         if(tlsEnabled == 1)
@@ -197,8 +309,7 @@ public class TCPConnector : Utils
     }
 
     public bool addToRemoteDialPlans(List<string> asteriskNamesList)
-    {
-       
+    {       
         managerResponse = managerConnection.SendAction(new GetConfigAction("extensions.conf"));
         UpdateConfigAction addToRemoteDialPlansUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
         if (managerResponse.IsSuccess())
@@ -277,6 +388,20 @@ public class TCPConnector : Utils
         UpdateConfigAction deleteOneContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
         deleteOneContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, deletedContext);
         deleteOneContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "remote", "include", deletedContext, deletedContext);
+        managerResponse = managerConnection.SendAction(deleteOneContextUpdateConfig);
+        if (!managerResponse.IsSuccess())
+        {
+            return false;
+        }
+        return true;
+    }
+
+    public bool deleteContexts(List<string> asteriskNameList)
+    {
+        UpdateConfigAction deleteOneContextUpdateConfig = new UpdateConfigAction("extensions.conf", "extensions.conf", false);
+        foreach(string asteriskName in asteriskNameList) { 
+            deleteOneContextUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, asteriskName);
+        }
         managerResponse = managerConnection.SendAction(deleteOneContextUpdateConfig);
         if (!managerResponse.IsSuccess())
         {

@@ -9,9 +9,10 @@
     </style>
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContentPlaceHolder" Runat="Server">
+    
     <div id="AsteriskManagmentDiv">  
     <asp:Label ID="Label_AsteriskManagment" runat="server" Text="Správa Asteriskov" Font-Bold="True"></asp:Label>
-        <asp:GridView ID="GridView_Asterisks" runat="server" AllowPaging="True" AutoGenerateColumns="False" CellPadding="4" OnSelectedIndexChanged="OnSelectedIndexChanged" DataSourceID="Asterisk_ObjectDataSource" ForeColor="#333333" GridLines="None" ShowHeaderWhenEmpty="True" DataKeyNames="id_Asterisk, tls_certDestination" PageSize="8" Width="423px">
+        <asp:GridView ID="GridView_Asterisks" runat="server" AllowPaging="True" AutoGenerateColumns="False" CellPadding="4" OnSelectedIndexChanged="OnSelectedIndexChanged" DataSourceID="Asterisk_ObjectDataSource" ForeColor="#333333" GridLines="None" ShowHeaderWhenEmpty="True" DataKeyNames="id_Asterisk, tls_certDestination" PageSize="8" Width="390px" Height="283px">
             <AlternatingRowStyle BackColor="White" />
             <Columns>
                 <asp:CommandField ShowSelectButton="true" SelectText="Upraviť"/>
@@ -63,7 +64,7 @@
         <br />
     <asp:Label ID="Label_name" runat="server" Text="Názov:"></asp:Label>
         <br />
-    <asp:TextBox ID="TextBox_name" runat="server" ValidationGroup="vg_addAsterisk" MaxLength="15"></asp:TextBox>
+    <asp:TextBox ID="TextBox_name" runat="server" ValidationGroup="vg_addAsterisk" MaxLength="11"></asp:TextBox>
         <asp:RequiredFieldValidator ID="RequiredFieldValidator_name" runat="server" ControlToValidate="TextBox_name" Display="Dynamic" ErrorMessage="Musíte zadať názov." ForeColor="#CC0000" ValidationGroup="vg_addAsterisk"></asp:RequiredFieldValidator>
         <br />
     <asp:Label ID="Label_ipAddress" runat="server" Text="IP adresa:"></asp:Label>
@@ -74,7 +75,7 @@
     <br />
     <asp:Label ID="Label_prefix" runat="server" Text="Prefix Asterisku:"></asp:Label>
     <br />
-    <asp:TextBox ID="TextBox_prefix" runat="server" MaxLength="10" TextMode="Number" ValidationGroup="vg_addAsterisk"></asp:TextBox>
+    <asp:TextBox ID="TextBox_prefix" runat="server" MaxLength="9" TextMode="Number" ValidationGroup="vg_addAsterisk"></asp:TextBox>
     <asp:RequiredFieldValidator ID="RequiredFieldValidator1" runat="server" Display="Dynamic" ErrorMessage="Musíte zadať prefix Asterisku." ForeColor="#CC0000" ValidationGroup="vg_addAsterisk" ControlToValidate="TextBox_prefix"></asp:RequiredFieldValidator>
     <br />
     <asp:Label ID="Label_login" runat="server" Text="Login:"></asp:Label>
@@ -109,9 +110,9 @@
     <div id="logDiv">
         <asp:label runat="server" text="Log:" ID="Label_log" Font-Bold="True"></asp:label>
         <br />
-        <asp:textbox runat="server" ID="TextBox_log" Height="273px" TextMode="MultiLine" Width="319px"></asp:textbox>
+        <asp:textbox runat="server" ID="TextBox_log"  Height="273px" TextMode="MultiLine" Width="319px" ClientIDMode="Static" Font-Size="Smaller" ReadOnly="True"></asp:textbox>
         <br />
         <asp:button runat="server" text="Vyčistiť" ID="button_clear" OnClick="button_clear_Click" />
     </div>
-</asp:Content>
+   </asp:Content>
 

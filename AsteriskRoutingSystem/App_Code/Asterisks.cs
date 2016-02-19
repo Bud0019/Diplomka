@@ -109,6 +109,18 @@ namespace AsteriskRoutingSystem
             };
         }
 
+        public void deleteAsteriskByName(string name_Asterisk)
+        {
+            using (SqlConnection connection = new SqlConnection(CS))
+            {
+                SqlCommand deleteAsteriskCmd = new SqlCommand("delete from Asterisks where name_Asterisk = @name_Asterisk", connection);
+                deleteAsteriskCmd.Parameters.AddWithValue("@name_Asterisk", name_Asterisk);
+                SqlDataAdapter sda = new SqlDataAdapter(deleteAsteriskCmd);
+                connection.Open();
+                deleteAsteriskCmd.ExecuteNonQuery();
+            };
+        }
+
         public void insertTransferedUser(TransferedUser user)
         {
             using (SqlConnection connection = new SqlConnection(CS))

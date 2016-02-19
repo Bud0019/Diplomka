@@ -3,8 +3,7 @@
 <asp:Content ID="Content1" ContentPlaceHolderID="head" runat="Server">
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContentPlaceHolder" runat="Server">
-
-    <asp:Login ID="Login" runat="server" BackColor="#EFF3FB" BorderColor="#B5C7DE" BorderPadding="4" Font-Names="Verdana" Font-Size="0.8em" ForeColor="#333333" CreateUserText="Registrovať" DisplayRememberMe="False" FailureText="Prihlásenie zlyhalo. Skúste to znova." Height="179px" LoginButtonText="Prihlásiť" PasswordLabelText="Heslo:" PasswordRecoveryText="Zabudnuté heslo?" PasswordRequiredErrorMessage="Musíte zadať heslo." TextLayout="TextOnTop" TitleText="Zadajte meno a heslo" UserNameLabelText="Užívateľské meno:" UserNameRequiredErrorMessage="Musíte zadať meno." Width="228px" CreateUserUrl="~/Register_page.aspx" PasswordRecoveryUrl="~/PasswordRecovery_page.aspx" OnAuthenticate="Login_Authenticate" DestinationPageUrl="~/LoggedUserSite/User_page.aspx">
+    <asp:Login ID="Login" runat="server" BackColor="#EFF3FB" BorderColor="#B5C7DE" BorderPadding="4" Font-Names="Verdana" Font-Size="0.8em" ForeColor="#333333" CreateUserText="Registrovať" DisplayRememberMe="False" FailureText="Prihlásenie zlyhalo. Skúste to znova." Height="179px" LoginButtonText="Prihlásiť" PasswordLabelText="Heslo:" PasswordRequiredErrorMessage="Musíte zadať heslo." TextLayout="TextOnTop" TitleText="Zadajte meno a heslo" UserNameLabelText="Užívateľské meno:" UserNameRequiredErrorMessage="Musíte zadať meno." Width="228px" CreateUserUrl="~/Register_page.aspx" OnAuthenticate="Login_Authenticate" DestinationPageUrl="~/LoggedUserSite/User_page.aspx">
         <InstructionTextStyle Font-Italic="True" ForeColor="Black" />
         <LoginButtonStyle BackColor="White" BorderColor="#507CD1" BorderStyle="Solid" BorderWidth="1px" Font-Names="Verdana" Font-Size="0.8em" ForeColor="#284E98" />
         <TextBoxStyle Font-Size="0.8em" />
@@ -12,6 +11,6 @@
     </asp:Login>
     <p style="position: absolute; top: 6px; left: 269px; height: 178px; width: 346px; margin: 0px;">
         nieco o systeme...TO DO!!!
-    </p>
+    </p>   
 </asp:Content>
 

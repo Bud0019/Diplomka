@@ -12,7 +12,7 @@ using System.Text;
 
 public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
 {
-    TCPConnector tcp = new TCPConnector();
+    AMIConnector tcp = new AMIConnector();
     AsteriskAccessLayer asteriskAccessLayer = new AsteriskAccessLayer();
 
     public List<string> usersList
@@ -162,13 +162,13 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                 {
                                     asteriskAccessLayer.insertTransferedUser(user);
                                    // if(tcp.addToTrunkContextOnOriginal(transferedUser.transferedUser, transferedUser.originalAsterisk))
-                                      if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.addToTrunkContextOnOriginal, user.transferedUser, user.originalAsterisk,null,null,null))
+                                      if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.addToTrunkContextOnOriginal, user.transferedUser, user.originalAsterisk,null,null,null))
                                       {
                                         tcp.logoff();
                                         if(tcp.login(fromAddress, amiLogin, amiPswd))
                                         {
                                             //if (tcp.addToOriginalContext(transferedUser.transferedUser, transferedUser.originalContext, transferedUser.currentAsterisk) && tcp.deleteFromOriginal(transferedUser.transferedUser))
-                                            if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.addToOriginalContext, user.transferedUser, null, user.currentAsterisk, user.originalContext, null) && tcp.deleteFromOriginal(user.transferedUser))
+                                            if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.addToOriginalContext, user.transferedUser, null, user.currentAsterisk, user.originalContext, null) && tcp.deleteFromOriginal(user.transferedUser))
                                             {
                                                 usersList = tcp.getUsersByAsterisk(asterisk.name_Asterisk);
                                                 tcp.logoff();
@@ -179,7 +179,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                                         if(tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI)))
                                                         {
                                                             //if(tcp.addToOthersAsteriskDialPlans(user.transferedUser, user.currentAsterisk, user.originalAsterisk))
-                                                            if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.addToOthersAsteriskDialPlans, user.transferedUser, user.originalAsterisk, user.currentAsterisk, null, null))
+                                                            if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.addToOthersAsteriskDialPlans, user.transferedUser, user.originalAsterisk, user.currentAsterisk, null, null))
                                                             {
                                                                 //pridanie k dialplanu ostatnych asteriskov
                                                                
@@ -218,13 +218,13 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                 {
                                     TransferedUser tu = asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(0);
                                     //if (tcp.deleteInOriginalContext(tu.transferedUser, tu.originalContext, tu.currentAsterisk) &&  tcp.returnOriginalContext(tu.transferedUser, tu.originalContext))
-                                    if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.deleteInOriginalContext, tu.transferedUser, null, tu.currentAsterisk, tu.originalContext, null) && tcp.returnOriginalContext(tu.transferedUser, tu.originalContext))
+                                    if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.deleteInOriginalContext, tu.transferedUser, null, tu.currentAsterisk, tu.originalContext, null) && tcp.returnOriginalContext(tu.transferedUser, tu.originalContext))
                                     {                                       
                                         tcp.logoff();
                                         if(tcp.login(fromAddress, amiLogin, amiPswd))
                                         {
                                            // if (tcp.deleteFromSourceAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk) && tcp.deleteFromOriginal(tu.transferedUser))
-                                                if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.deleteFromSourceAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, null, null, null) && tcp.deleteFromOriginal(tu.transferedUser))
+                                                if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.deleteFromSourceAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, null, null, null) && tcp.deleteFromOriginal(tu.transferedUser))
                                                 {
                                                 usersList = tcp.getUsersByAsterisk(asterisk.name_Asterisk);
                                                 tcp.logoff();
@@ -235,7 +235,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                                         if (tcp.login(otherAsterisk.ip_address, otherAsterisk.login_AMI, tcp.DecryptAMIPassword(otherAsterisk.password_AMI)))
                                                         {
                                                             //if (tcp.deleteFromRestAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk))
-                                                            if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.deleteFromRestAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, null, null))
+                                                            if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.deleteFromRestAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, null, null))
                                                             {
                                                                 //pridanie k dialplanu ostatnych asteriskov
                                                                 
@@ -277,14 +277,14 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                 {
                                     TransferedUser tu = asteriskAccessLayer.selectTransferedUser(GridView_userTransfer.SelectedRow.Cells[1].Text).ElementAt(0);
                                     //if(tcp.updateInCurrentAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk))
-                                      if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.updateDialPlanInDestinationAsterisk, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk,null,null))
+                                      if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.updateDialPlanInDestinationAsterisk, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk,null,null))
                                       {
                                         
                                         tcp.logoff();
                                         if(tcp.login(fromAddress, amiLogin, amiPswd))
                                         {
                                             //if(tcp.updateInCurrentAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk, DropDownList_to.SelectedValue) && tcp.deleteFromOriginal(tu.transferedUser))
-                                            if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.updateInCurrentAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, DropDownList_to.SelectedValue, null, null) && tcp.deleteFromOriginal(tu.transferedUser))
+                                            if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.updateInCurrentAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, DropDownList_to.SelectedValue, null, null) && tcp.deleteFromOriginal(tu.transferedUser))
                                             {
                                                 usersList = tcp.getUsersByAsterisk(asterisk.name_Asterisk);
                                                 tcp.logoff();
@@ -296,7 +296,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                                             if (otherAsterisk.name_Asterisk.Equals(tu.originalAsterisk))
                                                             {
                                                                 //if (tcp.updateInOriginalAsteriskDialPlan(tu.transferedUser, tu.originalContext, tu.currentAsterisk, DropDownList_to.SelectedValue))
-                                                                if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.updateInOriginalAsteriskDialPlan, tu.transferedUser, null, tu.currentAsterisk, tu.originalContext, DropDownList_to.SelectedValue))
+                                                                if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.updateInOriginalAsteriskDialPlan, tu.transferedUser, null, tu.currentAsterisk, tu.originalContext, DropDownList_to.SelectedValue))
                                                                 {
 
                                                                 }
@@ -304,7 +304,7 @@ public partial class LoggedUserSite_UserTransfer_page : System.Web.UI.Page
                                                             else
                                                             {
                                                                 //if(tcp.updateInRestAsteriskDialPlan(tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, DropDownList_to.SelectedValue))
-                                                                if (tcp.sendUpdateDialPlanRequest(TCPConnector.updateDialPlanMessage.updateInRestAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, null, DropDownList_to.SelectedValue))
+                                                                if (tcp.sendUpdateDialPlanRequest(AMIConnector.updateDialPlanMessage.updateInRestAsteriskDialPlan, tu.transferedUser, tu.originalAsterisk, tu.currentAsterisk, null, DropDownList_to.SelectedValue))
                                                                 {
                                                                     
                                                                 }

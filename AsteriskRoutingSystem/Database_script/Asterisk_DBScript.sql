@@ -92,15 +92,15 @@ select * from Asterisks
 delete from Asterisks where id_Asterisk = 126 
 delete from Trunks
 drop table Asterisks
-delete from dbo.aspnet_Users
+select * from dbo.aspnet_Users
 delete from transferedUser
 select * from transferedUser
 
 update transferedUser set currentAsterisk = 'asterisk225' where transferedUser = '222221111'
 
 update Asterisks
-set prefix_Asterisk = '1'
-where id_Asterisk = 4
+set tls_enabled = 0
+where id_Asterisk = 21
 
 select COUNT(name_Asterisk), COUNT(ip_address), COUNT(prefix_Asterisk) from Asterisks where name_Asterisk = 'asterisk214' or ip_address = '158.196.244.214' or prefix_Asterisk = '1'
 

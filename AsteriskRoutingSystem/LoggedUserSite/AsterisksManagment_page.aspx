@@ -12,13 +12,13 @@
     
     <div id="AsteriskManagmentDiv">  
     <asp:Label ID="Label_AsteriskManagment" runat="server" Text="Správa Asteriskov" Font-Bold="True"></asp:Label>
-        <asp:GridView ID="GridView_Asterisks" runat="server" AllowPaging="True" AutoGenerateColumns="False" CellPadding="4" OnSelectedIndexChanged="OnSelectedIndexChanged" DataSourceID="Asterisk_ObjectDataSource" ForeColor="#333333" GridLines="None" ShowHeaderWhenEmpty="True" DataKeyNames="id_Asterisk, tls_certDestination" PageSize="8" Width="390px" Height="283px">
+        <asp:GridView ID="GridView_Asterisks" runat="server" AllowPaging="True" AutoGenerateColumns="False" CellPadding="4" OnSelectedIndexChanged="OnSelectedIndexChanged" DataSourceID="Asterisk_ObjectDataSource" ForeColor="#333333" GridLines="None" ShowHeaderWhenEmpty="True" DataKeyNames="id_Asterisk, tls_certDestination" PageSize="8" Width="423px">
             <AlternatingRowStyle BackColor="White" />
             <Columns>
                 <asp:CommandField ShowSelectButton="true" SelectText="Upraviť"/>
                 <asp:BoundField 
                     DataField="name_Asterisk"
-                    HeaderText="Asterisk ID"
+                    HeaderText="Názov"
                     />
                 <asp:BoundField 
                     DataField="prefix_Asterisk"
@@ -104,13 +104,11 @@
        
     <asp:Button ID="Button_cancel" runat="server" OnClick="Button_cancel_Click" Text="Zrušiť" Visible="False" />
        
-    <br />
-    <br />
     </div>
-    <div id="logDiv">
+     <div id="logDiv">
         <asp:label runat="server" text="Log:" ID="Label_log" Font-Bold="True"></asp:label>
         <br />
-        <asp:textbox runat="server" ID="TextBox_log"  Height="273px" TextMode="MultiLine" Width="319px" ClientIDMode="Static" Font-Size="Smaller" ReadOnly="True"></asp:textbox>
+        <asp:textbox runat="server" ID="TextBox_log"  Height="267px" TextMode="MultiLine" Width="293px" ClientIDMode="Static" Font-Size="Smaller" ReadOnly="True" ValidateRequestMode="Disabled"></asp:textbox>
         <br />
         <asp:button runat="server" text="Vyčistiť" ID="button_clear" OnClick="button_clear_Click" />
     </div>

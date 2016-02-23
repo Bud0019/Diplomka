@@ -15,7 +15,10 @@
        <asp:ListItem Text="--Vybrať--" Value="0" />
    </Items>
     </asp:DropDownList>
+    <br />
     <asp:Button ID="Button_transfer" runat="server" Text="Presunuť" OnClick="Button_transfer_Click" ValidationGroup="transfer_validation" />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+    <br />
     <asp:Label ID="Label_notSelected" runat="server" ForeColor="#CC0000" Text="Vyberte užívateľa." Visible="False"></asp:Label>
     <asp:CompareValidator ID="CompareValidator_checkMatch" runat="server" ErrorMessage="Zdroj a cieľ sa nesmú zhodovať." ControlToCompare="DropDownList_from" ControlToValidate="DropDownList_to" Display="Dynamic" ValidationGroup="transfer_validation" ForeColor="#CC0000" Operator="NotEqual"></asp:CompareValidator>
     <asp:RequiredFieldValidator ID="RequiredFieldValidator_from" runat="server" ErrorMessage="Vyberte zdroj." ControlToValidate="DropDownList_from" Display="Dynamic" ForeColor="#CC0000" InitialValue="0" ValidationGroup="transfer_validation"></asp:RequiredFieldValidator>
@@ -37,24 +40,26 @@
                <asp:TemplateField>
           <FooterTemplate>
               <div style="position:relative; float:left" > 
-              <asp:Label runat="server" Text="Vyhľadať:" ID="Label_search"></asp:Label>
-              <asp:TextBox ID="TextBox_search" runat="server" TextMode="Number" />
-              <asp:ImageButton runat="server" ID="imageButton_search" Height="22px" ImageUrl="~/App_Themes/Style/Images/searchButton.png" style="margin-left: 0px" Width="28px" ImageAlign="AbsBottom"></asp:ImageButton>   
                   </div>                       
           </FooterTemplate>                 
      </asp:TemplateField>            
             </Columns>
       
-         <EditRowStyle BackColor="#2461BF" />
+         <EditRowStyle BackColor="#2461BF" HorizontalAlign="Center" VerticalAlign="Middle" />
          <FooterStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" HorizontalAlign="Left" Wrap="True" />
-         <HeaderStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" />
+         <HeaderStyle BackColor="#507CD1" Font-Bold="True" ForeColor="White" HorizontalAlign="Center" VerticalAlign="Middle" />
          <PagerStyle BackColor="#2461BF" ForeColor="White" HorizontalAlign="Center" />
-         <RowStyle BackColor="#EFF3FB" />
+         <RowStyle BackColor="#EFF3FB" HorizontalAlign="Center" />
          <SelectedRowStyle BackColor="#D1DDF1" Font-Bold="True" ForeColor="#333333" />
          <SortedAscendingCellStyle BackColor="#F5F7FB" />
          <SortedAscendingHeaderStyle BackColor="#6D95E1" />
          <SortedDescendingCellStyle BackColor="#E9EBEF" />
          <SortedDescendingHeaderStyle BackColor="#4870BE" />
     </asp:GridView>
+    <div id="divLogUserTransfer">
+        <asp:Label ID="UserTransferLog" runat="server" Text="Log:" Font-Bold="True"></asp:Label>
+        <br />
+        <asp:TextBox ID="TextBox_log" runat="server" Font-Size="Smaller" Height="261px" ReadOnly="True" TextMode="MultiLine" ValidateRequestMode="Disabled" Width="299px"></asp:TextBox>
+    </div>
     </asp:Content>
 

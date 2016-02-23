@@ -9,8 +9,5 @@
         <TextBoxStyle Font-Size="0.8em" />
         <TitleTextStyle BackColor="#507CD1" Font-Bold="True" Font-Size="0.9em" ForeColor="White" />
     </asp:Login>
-    <p style="position: absolute; top: 6px; left: 269px; height: 178px; width: 346px; margin: 0px;">
-        nieco o systeme...TO DO!!!
-    </p>   
 </asp:Content>
 

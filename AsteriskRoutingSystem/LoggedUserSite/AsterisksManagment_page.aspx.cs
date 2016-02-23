@@ -140,14 +140,14 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
             ami.logoff();
         }
         ami.login(TextBox_ipAddress.Text, TextBox_login.Text, ami.DecryptAMIPassword(TextBox_password.Text));
-        ami.deleteTrunk(asteriskList, -1, CheckBox_TLS.Checked, TextBox_certDestination.Text);
+        ami.deleteTrunk(asteriskList, -1, currentTLSStatus, TextBox_certDestination.Text);
         ami.deleteContexts(asteriskNameList);
         ami.deleteAllRemoteContexts(asteriskNameList);
         ami.reloadModules();
         ami.logoff();
     }
 
-    private void rollbackOfDelete(List<AsteriskRoutingSystem.Asterisk> rollbackListOfDelete, List<AsteriskRoutingSystem.Asterisk> asteriskList, List<string> asteriskNameList)
+    private void rollbackOfDelete(List<AsteriskRoutingSystem.Asterisk> rollbackListOfDelete, List<AsteriskRoutingSystem.Asterisk> asteriskList, List<string> asteriskNameList, bool isTLSDeleted)
     {
         foreach (AsteriskRoutingSystem.Asterisk asterisk in rollbackListOfDelete)
         {
@@ -161,7 +161,10 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         ami.login(TextBox_ipAddress.Text, TextBox_login.Text, passwordForRollback);
         ami.addTrunk(asteriskList, int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()));
         ami.addPrefix(asteriskList, int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()));
-        ami.createInitialContexts(asteriskNameList, int.Parse(GridView_Asterisks.SelectedRow.Cells[5].Text), certDestinationForRollback);
+        if(isTLSDeleted)
+            ami.createInitialContexts(asteriskNameList, int.Parse(GridView_Asterisks.SelectedRow.Cells[5].Text), certDestinationForRollback);
+        else
+            ami.createInitialContexts(asteriskNameList, 0, certDestinationForRollback);
         ami.reloadModules();
         ami.logoff();
     }
@@ -268,7 +271,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                 }
                 else
                 {
-                    ami.deleteTrunk(asteriskList, -1, false, null);
+                    ami.deleteTrunk(asteriskList, -1, 0, null);
                     asteriskAccessLayer.deleteAsteriskByName(TextBox_name.Text);
                     writeToLog("<" + TextBox_name.Text + ">: Pridanie prefixu zlyhalo!\n");
                     return;
@@ -280,7 +283,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                 }
                 else
                 {
-                    ami.deleteTrunk(asteriskList, -1, CheckBox_TLS.Checked, TextBox_certDestination.Text);
+                    ami.deleteTrunk(asteriskList, -1, asterisk.tls_enabled, asterisk.tls_certDestination);
                     ami.deleteContexts(asteriskNamesList);                   
                     asteriskAccessLayer.deleteAsteriskByName(TextBox_name.Text);
                     writeToLog("<" + TextBox_name.Text + ">: Vytvorenie kontextov zlyhalo!\n");
@@ -292,7 +295,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
 
                 foreach (AsteriskRoutingSystem.Asterisk oneAsterisk in asteriskList)
                 {
-                    if (ami.login(asterisk.ip_address, asterisk.login_AMI, ami.DecryptAMIPassword(asterisk.password_AMI)))
+                    if (ami.login(oneAsterisk.ip_address, oneAsterisk.login_AMI, ami.DecryptAMIPassword(oneAsterisk.password_AMI)))
                     {
                         writeToLog("<" + oneAsterisk.name_Asterisk + ">: Pripojenie OK!\n");
                     }
@@ -376,6 +379,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         List<AsteriskRoutingSystem.Asterisk> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
         List<string> asteriskNamesList = getAsteriskList(asteriskList);
         bool fault = false;
+        bool isDeleted = false;
         List<AsteriskRoutingSystem.Asterisk> asteriskListForRollback = new List<AsteriskRoutingSystem.Asterisk>();
 
         foreach (AsteriskRoutingSystem.Asterisk asterisk in asteriskList)
@@ -392,10 +396,11 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                 {
                     fault = true;                                       
                     writeToLog("<" + asterisk.name_Asterisk + ">: Pripojenie zlyhalo!\n");
+                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList, false);
                     break;
                 }
 
-                if (ami.deleteTrunk(asteriskList, int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()), true, asterisk.tls_certDestination))
+                if (ami.deleteTrunk(asteriskList, int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()), asterisk.tls_enabled, asterisk.tls_certDestination))
                 {
                     writeToLog("<" + asterisk.name_Asterisk + ">: Zmazanie trunkov OK!\n");
                 }
@@ -403,6 +408,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                 {
                     fault = true;
                     writeToLog("<" + asterisk.name_Asterisk + ">: Zmazanie trunkov zlyhalo!\n");
+                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList, false);
                     break;
                 }
                 if (ami.deleteAllRemoteContexts(asteriskNamesList))
@@ -414,10 +420,12 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     fault = true;                   
                     writeToLog("<" + asterisk.name_Asterisk + ">: Zmazanie kontextov zlyhalo!\n");
                     ami.addTrunk(asteriskList, int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString()));
+                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList, true);
                     break;
                 }
                 ami.reloadModules();
                 ami.logoff();
+                isDeleted = true;
             }
             else
             {
@@ -429,7 +437,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                 {
                     fault = true;                      
                     writeToLog("<" + asterisk.name_Asterisk + ">: Pripojenie zlyhalo!\n");
-                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList);
+                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList, isDeleted);
                     break;
                 }
 
@@ -441,7 +449,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                 {
                     fault = true; 
                     writeToLog("<" + asterisk.name_Asterisk + ">: Vymazanie trunk zlyhalo!\n");
-                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList);
+                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList, isDeleted);
                     break;
                 }
 
@@ -455,7 +463,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     writeToLog("<" + asterisk.name_Asterisk + ">: Vymazanie kontextu zlyhalo!\n");
                     ami.addTrunk(GridView_Asterisks.SelectedRow.Cells[1].Text, GridView_Asterisks.SelectedRow.Cells[3].Text, 
                         int.Parse(GridView_Asterisks.SelectedRow.Cells[5].Text));
-                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList);
+                    rollbackOfDelete(asteriskListForRollback, asteriskList, asteriskNamesList, isDeleted);
                     break;
                 }
                 ami.reloadModules();
@@ -505,7 +513,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
             int returnCode;
             if ((returnCode = asteriskAccessLayer.updateAsterisk(asterisk)) == -1)
             {
-                writeToLog("<" + asterisk.name_Asterisk + ">: Pridanie do DB OK!\n");
+                writeToLog("<" + asterisk.name_Asterisk + ">: Zmena v DB OK!\n");
             }
             else if (returnCode == 1)
             {
@@ -552,13 +560,13 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
                     }
                     if (ami.updateTrunk(GridView_Asterisks.SelectedRow.Cells[1].Text, asterisk.name_Asterisk, asterisk.ip_address))
                     {
-                        writeToLog("<" + oneAsterisk.name_Asterisk + ">: Pridanie trunku OK!\n");
+                        writeToLog("<" + oneAsterisk.name_Asterisk + ">: Zmena trunku OK!\n");
                     }
                     else
                     {
                         rollbackOfUpdate(asteriskListForRollback, backupAsterisk, asteriskList);
                         asteriskAccessLayer.updateAsterisk(backupAsterisk);
-                        writeToLog("<" + oneAsterisk.name_Asterisk + ">: Pridanie trunku zlyhalo!\n");
+                        writeToLog("<" + oneAsterisk.name_Asterisk + ">: Zmena trunku zlyhala!\n");
                         break;
                     }
                     if(ami.updateDialPlans(GridView_Asterisks.SelectedRow.Cells[1].Text, TextBox_name.Text, TextBox_prefix.Text))

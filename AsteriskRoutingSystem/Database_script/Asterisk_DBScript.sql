@@ -89,7 +89,7 @@ Begin
 End
 
 select * from Asterisks 
-delete from Asterisks where id_Asterisk = 126 
+delete from Asterisks where id_Asterisk = 31
 delete from Trunks
 drop table Asterisks
 select * from dbo.aspnet_Users

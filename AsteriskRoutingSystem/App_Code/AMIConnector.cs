@@ -128,14 +128,14 @@ public class AMIConnector : Utils
         }
     }
 
-    public bool deleteTrunk(List<AsteriskRoutingSystem.Asterisk> asteriskList, int idDeleted, bool tlsEnable, string certDestination)
+    public bool deleteTrunk(List<AsteriskRoutingSystem.Asterisk> asteriskList, int idDeleted, int tlsEnable, string certDestination)
     {
         UpdateConfigAction deleteTrunkUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", false);
         foreach(AsteriskRoutingSystem.Asterisk asterisk in asteriskList) {
             if (asterisk.id_Asterisk != idDeleted) 
                 deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, asterisk.name_Asterisk);           
         }
-        if (tlsEnable)
+        if (tlsEnable == 1)
         {
             deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlsenable", "tls", "tls");
             deleteTrunkUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlscertfile", certDestination, certDestination);
@@ -174,7 +174,7 @@ public class AMIConnector : Utils
         if (tlsEnabled == 1 && currentTLSstatus == 0)
         {          
             updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlsenable", "tls");
-            updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscerfile", certDestination);
+            updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscertfile", certDestination);
             if (!isFirst)
             {
                 foreach(AsteriskRoutingSystem.Asterisk asterisk in asteriskList)
@@ -196,7 +196,7 @@ public class AMIConnector : Utils
         else if (currentTLSstatus == 1 && tlsEnabled == 0)
         {      
             updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlsenable", "tls", "tls");
-            updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlscerfile", certDestination, certDestination);
+            updateTLSUpdateConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlscertfile", certDestination, certDestination);
             if (!isFirst)
             {
                 foreach (AsteriskRoutingSystem.Asterisk asterisk in asteriskList)
@@ -270,7 +270,7 @@ public class AMIConnector : Utils
         {
             UpdateConfigAction addTlsEnableUpdateConfig = new UpdateConfigAction("sip.conf", "sip.conf", true);
             addTlsEnableUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlsenable", "tls");
-            addTlsEnableUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscerfile", certDestination);
+            addTlsEnableUpdateConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscertfile", certDestination);
             managerResponse = managerConnection.SendAction(addTlsEnableUpdateConfig);
             if (!managerResponse.IsSuccess())
                 return false;        

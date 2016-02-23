@@ -4,7 +4,9 @@
 </asp:Content>
 <asp:Content ID="Content2" ContentPlaceHolderID="MainContentPlaceHolder" Runat="Server">
       <p>
-          Pokec o Asteriskoch a AMI....TO DO !!!
+        - Vítajte v systéme smerovania pre PBx Asterisk.<br/>
+        - Systém je určený pre spravovanie trunk liniek medzi Asteriskami.<br/>
+        - Rozšírenou funkcionalitou je prenos užívateľa medzi Asteriskami.<br/>
       </p>
 </asp:Content>
 

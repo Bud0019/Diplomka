@@ -15,6 +15,14 @@ body {
     height: 70pt;
 }
 
+#divLogUserTransfer {
+   position:absolute;
+   left:45em;
+   top:0em;
+    height: 285px;
+    width: 308px;
+}
+
 #footerDiv {
     border-top-style: solid;
     border-top-width: 1px;
@@ -96,9 +104,9 @@ body {
 
 #AsteriskManagmentDiv {
     float: left;
-    padding-right: 1em;
+    padding-right: 0.5em;
     width: auto;
-    margin-right: 1em;
+    margin-right: 0.5em;
     border-right-width: 1px;
     height:auto;
     border-right-style: dotted;
@@ -137,14 +145,15 @@ h5 {
 }
 
 #manageAsteriskDiv{
-    width:320pt;
+    width:359pt;
     float:left;
-    
 }
 #logDiv{
-    float:left;
-    width:260pt;
-    height: 286px;
+    position:absolute;
+    top:0em;
+    right:2em;
+    width:222pt;
+    height: 296px;
 }
 
 /*Main_MasterPage*/

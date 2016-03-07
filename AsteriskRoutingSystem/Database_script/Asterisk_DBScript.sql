@@ -15,10 +15,10 @@ tls_certDestination nvarchar(50)
 )
 
 create table transferedUser(
-transferedUser nvarchar(9) primary key,
-originalContext nvarchar(20),
-originalAsterisk nvarchar(20),
-currentAsterisk nvarchar(20)
+name_user nvarchar(9) primary key,
+original_context nvarchar(20),
+original_asterisk nvarchar(20),
+current_asterisk nvarchar(20)
 )
 
 alter proc insertUniqueAsterisk
@@ -88,10 +88,10 @@ Begin
 	end catch
 End
 
-select * from Asterisks 
-delete from Asterisks where id_Asterisk = 31
+select * from Asterisks
+delete from Asterisks where id_Asterisk = 63
 delete from Trunks
-drop table Asterisks
+drop table transferedUser
 select * from dbo.aspnet_Users
 delete from transferedUser
 select * from transferedUser
@@ -99,8 +99,8 @@ select * from transferedUser
 update transferedUser set currentAsterisk = 'asterisk225' where transferedUser = '222221111'
 
 update Asterisks
-set tls_enabled = 0
-where id_Asterisk = 21
+set name_asterisk = 'asterisk225'
+where id_Asterisk = 56
 
 select COUNT(name_Asterisk), COUNT(ip_address), COUNT(prefix_Asterisk) from Asterisks where name_Asterisk = 'asterisk214' or ip_address = '158.196.244.214' or prefix_Asterisk = '1'
 

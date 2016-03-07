@@ -104,9 +104,9 @@ body {
 
 #AsteriskManagmentDiv {
     float: left;
-    padding-right: 0.5em;
+    padding-right: 1em;
     width: auto;
-    margin-right: 0.5em;
+    margin-right: 1em;
     border-right-width: 1px;
     height:auto;
     border-right-style: dotted;
@@ -163,3 +163,4 @@ h5 {
     margin: 0px;
     padding-left: 10pt;
 }
+

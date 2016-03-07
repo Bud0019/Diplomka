@@ -7,7 +7,7 @@
     <title>UserPage</title>
     <asp:ContentPlaceHolder ID="head" runat="server">
     </asp:ContentPlaceHolder>
-    <link href="../App_Themes/Style/StyleSheet.css" rel="stylesheet" type="text/css" />
+    <link href="../App_Themes/Style/StyleSheet.css" rel="stylesheet" type="text/css" />    
 </head>
 <body>
     <form id="form1" runat="server">

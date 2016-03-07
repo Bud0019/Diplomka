@@ -1,5 +1,4 @@
-﻿using AsteriskRoutingSystem;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -13,7 +12,6 @@ public partial class Register_page : System.Web.UI.Page
     {
 
     }
-
 
     protected void CreateUserWizard_CreatingUser(object sender, LoginCancelEventArgs e)
     {

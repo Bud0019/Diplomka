@@ -5,14 +5,15 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+using System.Web.UI.WebControls;
 
 /// <summary>
 /// Summary description for Utils
 /// </summary>
-public abstract class Utils
+public static class Utils
 {
 
-    public string EncryptAMIPassword(string clearText)
+    public static string EncryptAMIPassword(string clearText)
     {
         string EncryptionKey = "MAKV2SPBNI99212";
         byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
@@ -34,7 +35,7 @@ public abstract class Utils
         return clearText;
     }
 
-    public string DecryptAMIPassword(string cipherText)
+    public static string DecryptAMIPassword(string cipherText)
     {
         string EncryptionKey = "MAKV2SPBNI99212";
         byte[] cipherBytes = Convert.FromBase64String(cipherText);
@@ -54,5 +55,11 @@ public abstract class Utils
             }
         }
         return cipherText;
+    }
+
+    public static string createPrefix(string prefix)
+    {
+        string tmpStr = "XXXXXXXXX";
+        return prefix + tmpStr.Substring(prefix.Length);
     }
 }

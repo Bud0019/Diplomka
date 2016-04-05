@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1">
+  <Class Name="AMIManager">
+    <Position X="4" Y="0.5" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>BCAIAAQwIIQAAAIAACBAAEwAEAAIAYAgAEgIIAEAECA=</HashCode>
+      <FileName>App_Code\AMIManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="RollbackManager">
+    <Position X="7" Y="5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAABAAAAAAAAAAQAAAAAAAAAAAAAAIACAAAAQAA=</HashCode>
+      <FileName>App_Code\RollbackManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TransferUserManager">
+    <Position X="7" Y="0.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>BAABAQAABAAAACAAAgABgAAAAAEAAAAAAAADIQAAAAA=</HashCode>
+      <FileName>App_Code\TransferUserManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TrunkManager">
+    <Position X="1" Y="0.5" Width="2.5" />
+    <Compartments>
+      <Compartment Name="Nested Types" Collapsed="false" />
+    </Compartments>
+    <NestedTypes>
+      <Delegate Name="TrunkManager.addAsteriskErrorHandler" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>App_Code\TrunkManager.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="TrunkManager.updateAsteriskErrorHandler" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>App_Code\TrunkManager.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+      <Delegate Name="TrunkManager.deleteAsteriskErrorHandler" Collapsed="true">
+        <TypeIdentifier>
+          <NewMemberFileName>App_Code\TrunkManager.cs</NewMemberFileName>
+        </TypeIdentifier>
+      </Delegate>
+    </NestedTypes>
+    <TypeIdentifier>
+      <HashCode>AAABAABAAIAAgQAAAQEAAAgAACIAAAAAACACwAAAAAA=</HashCode>
+      <FileName>App_Code\TrunkManager.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Utils">
+    <Position X="9.5" Y="0.5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAAAAAAAACAAAAAAAACAAAAAAAAAAAAAAAAAAA=</HashCode>
+      <FileName>App_Code\Utils.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="AsteriskAccessLayer">
+    <Position X="9.25" Y="5" Width="2" />
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAEAIAAABAAEAAAAAAAAAAIAACAABAAAAEAA=</HashCode>
+      <FileName>App_Code\AsteriskAccessLayer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="Asterisks">
+    <Position X="11.5" Y="5" Width="1.75" />
+    <TypeIdentifier>
+      <HashCode>AAABQAAAAAAQAAAAAAAAAAAABAAAAAAAAAJEABAAAEA=</HashCode>
+      <FileName>App_Code\Asterisks.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TransferedUserAccessLayer">
+    <Position X="12.25" Y="2.5" Width="2.25" />
+    <TypeIdentifier>
+      <HashCode>AAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAEAEAE=</HashCode>
+      <FileName>App_Code\TransferedUserAccessLayer.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="TransferedUser">
+    <Position X="11.5" Y="0.5" Width="1.5" />
+    <TypeIdentifier>
+      <HashCode>gAAAAAAAAAAAIAAAAAAAAAAAAAAAIAAACAAAAAAAAAA=</HashCode>
+      <FileName>App_Code\TransferedUser.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Enum Name="UpdateMessages">
+    <Position X="9.5" Y="2.25" Width="2.5" />
+    <TypeIdentifier>
+      <HashCode>AAAAIAAQAAAAAAACEAAAAAAAAAACAARgAAgAAAAAAIA=</HashCode>
+      <FileName>App_Code\UpdateMessages.cs</FileName>
+    </TypeIdentifier>
+  </Enum>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

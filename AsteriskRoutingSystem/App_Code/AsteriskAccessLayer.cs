@@ -11,14 +11,13 @@ using System.Data;
 /// </summary>
 public class AsteriskAccessLayer
 {
-
     private string CS = ConfigurationManager.ConnectionStrings["DBCS"].ConnectionString;
 
-    public int insertNewUniqueASterisk(Asterisks asterisk)
+    public int insertAsterisk(Asterisks asterisk)
     {
         using (SqlConnection connection = new SqlConnection(CS))
         {
-            SqlCommand insertCmd = new SqlCommand("insertUniqueAsterisk", connection);
+            SqlCommand insertCmd = new SqlCommand("insertAsterisk", connection);
             insertCmd.CommandType = System.Data.CommandType.StoredProcedure;
             insertCmd.Parameters.AddWithValue("@name_Asterisk", asterisk.name_Asterisk);
             insertCmd.Parameters.AddWithValue("@prefix_Asterisk", asterisk.prefix_Asterisk);
@@ -91,7 +90,7 @@ public class AsteriskAccessLayer
             DataTable dt = ds.Tables[0];
             Asterisks asterisk = new Asterisks();
             foreach (DataRow item in ds.Tables[0].Rows)
-            {               
+            {
                 asterisk.id_Asterisk = int.Parse(item["id_Asterisk"].ToString());
                 asterisk.name_Asterisk = item["name_Asterisk"].ToString();
                 asterisk.ip_address = item["ip_address"].ToString();
@@ -149,4 +148,8 @@ public class AsteriskAccessLayer
         }
         return list;
     }
+}
+
+public class Class1
+{
 }

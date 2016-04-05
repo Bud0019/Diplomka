@@ -38,7 +38,6 @@ public sealed class TrunkManager : AMIManager
         }
     }
 
-   
     public event updateAsteriskErrorHandler updateAsteriskErrorEvent
     {
         add
@@ -109,13 +108,13 @@ public sealed class TrunkManager : AMIManager
         int returnCode;
         rollbackState = false;
         textToLog = new StringBuilder();
-        List<Asterisks> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());
+        List<Asterisks> asteriskList = asteriskAccessLayer.getAsterisksInList(Membership.GetUser().UserName.ToString());       
         List<Asterisks> rollbackList = new List<Asterisks>();
 
         try
         {
             login(createdAsterisk.ip_address, createdAsterisk.login_AMI, Utils.DecryptAMIPassword(createdAsterisk.password_AMI));
-            if ((returnCode = asteriskAccessLayer.insertNewUniqueASterisk(createdAsterisk)) == -1)
+            if ((returnCode = asteriskAccessLayer.insertAsterisk(createdAsterisk)) == -1)
             {
             }
             else if (returnCode == 1)
@@ -135,26 +134,28 @@ public sealed class TrunkManager : AMIManager
             }
             addTrunk(asteriskList);
             addTLS(createdAsterisk.tls_enabled, createdAsterisk.tls_certDestination, asteriskList);
-            addPrefixContext(asteriskList);
-            createInitialContexts(asteriskList);
-            reloadModules();
-            logoff();
+            addContext(asteriskList);
             asteriskList.Add(createdAsterisk);
+            createInitialContexts(asteriskList);
+            asteriskList.Add(createdAsterisk);
+            reloadModules();
+            logoff();            
             foreach (Asterisks asterisk in asteriskList)
             {
                 currentAsterisk = asterisk;
                 if (asterisk.name_Asterisk.Equals(createdAsterisk.name_Asterisk))
-                    continue;               
-                login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));                
+                    continue;
+                login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));
                 addTrunk(createdAsterisk.name_Asterisk, createdAsterisk.ip_address, createdAsterisk.tls_enabled, asterisk.tls_enabled);
-                addPrefixContext(createdAsterisk.name_Asterisk, createdAsterisk.prefix_Asterisk);
-                addToRemoteDialPlans(asteriskList);
+                addContext(createdAsterisk.name_Asterisk, createdAsterisk.prefix_Asterisk);
+                addInclude(createdAsterisk.name_Asterisk);
+                checkContexts(asteriskList);
                 reloadModules();
                 logoff();
                 rollbackList.Add(asterisk);
             }
             return textToLog.Append("Pridanie Asterisku prebehlo úspešne!\n").ToString();
-        }        
+        }
         catch (AuthenticationFailedException)
         {
             asteriskList.Remove(createdAsterisk);
@@ -196,11 +197,11 @@ public sealed class TrunkManager : AMIManager
         Asterisks currentAsterisk = deletedAsterisk;
 
         try
-        {           
+        {
             login(deletedAsterisk.ip_address, deletedAsterisk.login_AMI, Utils.DecryptAMIPassword(deletedAsterisk.password_AMI));
             deleteTLS(deletedAsterisk.tls_enabled, deletedAsterisk.tls_certDestination);
             deleteTrunk(asteriskList);
-            deleteAllRemoteContexts(asteriskList);
+            deleteInitialContexts(asteriskList);
             reloadModules();
             logoff();
 
@@ -209,7 +210,7 @@ public sealed class TrunkManager : AMIManager
                 currentAsterisk = asterisk;
                 login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));
                 deleteTrunk(deletedAsterisk.name_Asterisk);
-                deleteOneContext(deletedAsterisk.name_Asterisk);
+                deleteContext(deletedAsterisk.name_Asterisk);
                 reloadModules();
                 logoff();
                 rollbackList.Add(asterisk);
@@ -236,7 +237,7 @@ public sealed class TrunkManager : AMIManager
             logoff();
             return textToLog.Append("Nastala chyba v:[" + currentAsterisk.name_Asterisk + "]\n" + managerException.Message + "\n").ToString();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             rollbackState = true;
             raiseDeleteTrunkErrorEvent("login", deletedAsterisk, currentAsterisk, rollbackList, asteriskList);
@@ -278,14 +279,15 @@ public sealed class TrunkManager : AMIManager
                 return textToLog.ToString();
             }
             updateTLS(updatedAsterisk.tls_enabled, updatedAsterisk.tls_certDestination, originalAsterisk.tls_certDestination, originalAsterisk.tls_enabled, asteriskList);
+            updateContext(originalAsterisk.prefix_Asterisk, updatedAsterisk.prefix_Asterisk);
             rollbackList.Add(updatedAsterisk);
             foreach (Asterisks asterisk in asteriskList)
             {
-                currentAsterisk = asterisk;               
-                login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));              
+                currentAsterisk = asterisk;
+                login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));
                 updateTrunk(originalAsterisk.name_Asterisk, updatedAsterisk.name_Asterisk, updatedAsterisk.ip_address, originalAsterisk.ip_address);
                 updateTLS(asterisk, updatedAsterisk, originalAsterisk);
-                updateDialPlans(originalAsterisk.name_Asterisk, updatedAsterisk.name_Asterisk, updatedAsterisk.prefix_Asterisk);
+                updateContext(originalAsterisk.name_Asterisk, updatedAsterisk.name_Asterisk, updatedAsterisk.prefix_Asterisk);
                 reloadModules();
                 logoff();
                 rollbackList.Add(asterisk);
@@ -311,7 +313,7 @@ public sealed class TrunkManager : AMIManager
             logoff();
             return textToLog.Append("Nastala chyba v:[" + currentAsterisk.name_Asterisk + "]\n" + managerException.Message + "\n").ToString();
         }
-        catch(Exception e)
+        catch (Exception e)
         {
             rollbackState = true;
             raiseUpdateTrunkErrorEvent("unknow", currentAsterisk, updatedAsterisk, originalAsterisk, rollbackList, asteriskList);

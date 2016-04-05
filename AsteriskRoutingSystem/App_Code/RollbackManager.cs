@@ -32,28 +32,28 @@ public sealed class RollbackManager : AMIManager
         {
             if (rollbackList.Count > 0)
             {
-                if (errorMethod.Equals("addPrefixContext"))
+                if (errorMethod.Equals("addContext"))
                 {
                     login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));
                     deleteTrunk(createdAsterisk.name_Asterisk);
                     logoff();
                 }
-                if (errorMethod.Equals("addToRemoteDialPlans"))
+                if (errorMethod.Equals("checkContexts"))
                 {
                     login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));
                     deleteTrunk(createdAsterisk.name_Asterisk);
-                    deleteOneContext(createdAsterisk.name_Asterisk);
+                    deleteContext(createdAsterisk.name_Asterisk);
                     logoff();
-                }                               
+                }
                 foreach (Asterisks rollbackAsterisk in rollbackList)
                 {
                     login(rollbackAsterisk.ip_address, rollbackAsterisk.login_AMI, Utils.DecryptAMIPassword(rollbackAsterisk.password_AMI));
                     deleteTrunk(createdAsterisk.name_Asterisk);
-                    deleteOneContext(createdAsterisk.name_Asterisk);
+                    deleteContext(createdAsterisk.name_Asterisk);
                     logoff();
                 }
                 login(createdAsterisk.ip_address, createdAsterisk.login_AMI, Utils.DecryptAMIPassword(createdAsterisk.password_AMI));
-                deleteAllRemoteContexts(asteriskList);
+                deleteInitialContexts(asteriskList);
                 deleteTLS(createdAsterisk.tls_enabled, createdAsterisk.tls_certDestination);
                 deleteTrunk(asteriskList);
                 asteriskAccessLayer.deleteAsteriskByName(createdAsterisk.name_Asterisk);
@@ -67,7 +67,7 @@ public sealed class RollbackManager : AMIManager
                     deleteTrunk(asteriskList);
                     logoff();
                 }
-                if (errorMethod.Equals("addPrefixContext"))
+                if (errorMethod.Equals("addContext"))
                 {
                     login(createdAsterisk.ip_address, createdAsterisk.login_AMI, Utils.DecryptAMIPassword(createdAsterisk.password_AMI));
                     deleteTrunk(asteriskList);
@@ -79,10 +79,10 @@ public sealed class RollbackManager : AMIManager
                     login(createdAsterisk.ip_address, createdAsterisk.login_AMI, Utils.DecryptAMIPassword(createdAsterisk.password_AMI));
                     deleteTrunk(asteriskList);
                     deleteTLS(createdAsterisk.tls_enabled, createdAsterisk.tls_certDestination);
-                    deleteAllRemoteContexts(asteriskList);
+                    deleteInitialContexts(asteriskList);
                     logoff();
-                }                                                  
-                asteriskAccessLayer.deleteAsteriskByName(createdAsterisk.name_Asterisk);               
+                }
+                asteriskAccessLayer.deleteAsteriskByName(createdAsterisk.name_Asterisk);
             }
         }
         catch (Exception e)
@@ -103,13 +103,13 @@ public sealed class RollbackManager : AMIManager
                     updateTrunk(updatedAsterisk.name_Asterisk, originalAsterisk.name_Asterisk, originalAsterisk.ip_address, updatedAsterisk.ip_address);
                     logoff();
                 }
-                if (errorMethod.Equals("updateDialPlans"))
+                if (errorMethod.Equals("updateContext"))
                 {
                     login(currentAsterisk.ip_address, currentAsterisk.login_AMI, Utils.DecryptAMIPassword(currentAsterisk.password_AMI));
                     updateTrunk(updatedAsterisk.name_Asterisk, originalAsterisk.name_Asterisk, originalAsterisk.ip_address, updatedAsterisk.ip_address);
                     updateTLS(originalAsterisk, currentAsterisk, updatedAsterisk);
                     logoff();
-                }                             
+                }
                 foreach (Asterisks asterisk in rollbackList)
                 {
                     if (asterisk.Equals(updatedAsterisk))
@@ -117,7 +117,7 @@ public sealed class RollbackManager : AMIManager
                     login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));
                     updateTrunk(updatedAsterisk.name_Asterisk, originalAsterisk.name_Asterisk, originalAsterisk.ip_address, updatedAsterisk.ip_address);
                     updateTLS(updatedAsterisk, asterisk, originalAsterisk);
-                    updateDialPlans(updatedAsterisk.name_Asterisk, originalAsterisk.name_Asterisk, originalAsterisk.prefix_Asterisk);
+                    updateContext(updatedAsterisk.name_Asterisk, originalAsterisk.name_Asterisk, originalAsterisk.prefix_Asterisk);
                     reloadModules();
                     logoff();
                 }
@@ -130,7 +130,7 @@ public sealed class RollbackManager : AMIManager
             else
             {
                 login(currentAsterisk.ip_address, currentAsterisk.login_AMI, Utils.DecryptAMIPassword(currentAsterisk.password_AMI));
-                updateTLS(originalAsterisk.tls_enabled, originalAsterisk.tls_certDestination, currentAsterisk.tls_certDestination, currentAsterisk.tls_enabled, asteriskList);
+                updateTLS(originalAsterisk.tls_enabled, originalAsterisk.tls_certDestination, currentAsterisk.tls_certDestination, currentAsterisk.tls_enabled, asteriskList);                
                 reloadModules();
                 logoff();
                 asteriskAccessLayer.updateAsterisk(originalAsterisk);
@@ -151,14 +151,14 @@ public sealed class RollbackManager : AMIManager
                 if (errorMethod.Equals("deleteOneContext"))
                 {
                     login(currentAsterisk.ip_address, currentAsterisk.login_AMI, Utils.DecryptAMIPassword(currentAsterisk.password_AMI));
-                    addTrunk(deletedAsterisk.name_Asterisk, deletedAsterisk.ip_address, deletedAsterisk.tls_enabled, currentAsterisk.tls_enabled);               
+                    addTrunk(deletedAsterisk.name_Asterisk, deletedAsterisk.ip_address, deletedAsterisk.tls_enabled, currentAsterisk.tls_enabled);
                     logoff();
-                }               
+                }
                 foreach (Asterisks asterisk in rollbackList)
-                {                    
+                {
                     login(asterisk.ip_address, asterisk.login_AMI, Utils.DecryptAMIPassword(asterisk.password_AMI));
                     addTrunk(deletedAsterisk.name_Asterisk, deletedAsterisk.ip_address, deletedAsterisk.tls_enabled, currentAsterisk.tls_enabled);
-                    addPrefixContext(deletedAsterisk.name_Asterisk, deletedAsterisk.prefix_Asterisk);
+                    addContext(deletedAsterisk.name_Asterisk, deletedAsterisk.prefix_Asterisk);
                     addInclude(deletedAsterisk.name_Asterisk);
                     reloadModules();
                     logoff();
@@ -167,10 +167,10 @@ public sealed class RollbackManager : AMIManager
                 addTLS(deletedAsterisk.tls_enabled, deletedAsterisk.tls_certDestination, asteriskList);
                 addTrunk(asteriskList);
                 createInitialContexts(asteriskList);
-                addPrefixContext(asteriskList);
+                addContext(asteriskList);
                 addInclude(asteriskList);
                 reloadModules();
-                logoff();                
+                logoff();
             }
             else
             {

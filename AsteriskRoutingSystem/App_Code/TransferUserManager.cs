@@ -1,4 +1,5 @@
-﻿using System;
+﻿using AsterNET.Manager;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -12,7 +13,7 @@ public sealed class TransferUserManager : AMIManager
     private AsteriskAccessLayer asteriskAccessLayer;
     private TransferedUserAccessLayer transferedUserAccessLayer;
     private TransferedUser transferedUser;
-
+    
     public static TransferUserManager TransferUserManagerInstance
     {
         get
@@ -35,7 +36,7 @@ public sealed class TransferUserManager : AMIManager
         selectedAsterisk = asteriskAccessLayer.SelectAsterisksByName(asteriskName);
         List<string> usersList = new List<string>();
         try
-        {
+        {                   
             login(selectedAsterisk.ip_address, selectedAsterisk.login_AMI, Utils.DecryptAMIPassword(selectedAsterisk.password_AMI));
             usersList = getUsersByAsterisk(selectedAsterisk.name_Asterisk);
             logoff();
@@ -204,9 +205,9 @@ public sealed class TransferUserManager : AMIManager
                 return "Presun prebehol v poriadku!";
             }
         }
-        catch (AsterNET.Manager.AuthenticationFailedException afe) { return "Presun zlyhal!"; }
-        catch (AsterNET.Manager.TimeoutException to) { return "Presun zlyhal!"; }
-        catch (AsterNET.Manager.ManagerException me) { return "Presun zlyhal!"; }
+        catch (AuthenticationFailedException) { return "Presun zlyhal!"; }
+        catch (AsterNET.Manager.TimeoutException) { return "Presun zlyhal!"; }
+        catch (ManagerException) { return "Presun zlyhal!"; }
     }   
 }
         

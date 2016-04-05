@@ -15,14 +15,12 @@ public abstract class AMIManager
     protected ManagerResponse managerResponse;
     protected UpdateConfigAction updateSipConfig;
     protected UpdateConfigAction updateExtensionsConfig;
-    protected static bool rollbackState = false; 
-     
-       
-    //constructor
-    public AMIManager()
-    {       
-    }
+    protected static bool rollbackState = false;
 
+    public AMIManager()
+    {
+    }
+    
     protected void reloadModules()
     {
         updateSipConfig = new UpdateConfigAction(SIP_CONFIG, SIP_CONFIG, true);
@@ -30,11 +28,11 @@ public abstract class AMIManager
         managerResponse = managerConnection.SendAction(updateSipConfig);
         managerResponse = managerConnection.SendAction(updateExtensionsConfig);
     }
-
+   
     protected void login(string ipAddress, string amiLogin, string amiPassword)
     {
         managerConnection = new ManagerConnection(ipAddress, PORT, amiLogin, amiPassword);
-        managerConnection.Login(15000);         
+        managerConnection.Login(15000);
     }
 
     protected void logoff()
@@ -50,7 +48,7 @@ public abstract class AMIManager
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, asterisk.name_Asterisk);
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "host", asterisk.ip_address);
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "type", "peer");
-            updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "context", "remote");   
+            updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "context", "trunksFromWebApp");
         }
         managerResponse = managerConnection.SendAction(updateSipConfig);
         if (!managerResponse.IsSuccess() && !rollbackState)
@@ -65,7 +63,7 @@ public abstract class AMIManager
         updateSipConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, trunkName);
         updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "host", hostIP);
         updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "type", "peer");
-        updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "context", "remote");
+        updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "context", "trunksFromWebApp");
         if (currentTlsEnabled == 1 && otherTlsEnabled == 1)
         {
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, trunkName, "transport", "tls");
@@ -93,8 +91,8 @@ public abstract class AMIManager
         updateSipConfig = new UpdateConfigAction(SIP_CONFIG, SIP_CONFIG);
         foreach (Asterisks asterisk in asteriskList)
         {
-              updateSipConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, asterisk.name_Asterisk);
-        }       
+            updateSipConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, asterisk.name_Asterisk);
+        }
         managerResponse = managerConnection.SendAction(updateSipConfig);
         if (!managerResponse.IsSuccess() && !rollbackState)
         {
@@ -106,7 +104,7 @@ public abstract class AMIManager
     {
         updateSipConfig = new UpdateConfigAction(SIP_CONFIG, SIP_CONFIG);
         updateSipConfig.AddCommand(UpdateConfigAction.ACTION_RENAMECAT, oldTrunkName, null, newTrunkName);
-        updateSipConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, newTrunkName, "host", newHostIP, oldHostIP);       
+        updateSipConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, newTrunkName, "host", newHostIP, oldHostIP);
         managerResponse = managerConnection.SendAction(updateSipConfig);
         if (!managerResponse.IsSuccess() && !rollbackState)
         {
@@ -121,14 +119,14 @@ public abstract class AMIManager
             updateSipConfig = new UpdateConfigAction(SIP_CONFIG, SIP_CONFIG, true);
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlsenable", "tls");
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscertfile", certDestination);
-            foreach(Asterisks asterisk in asteriskList)
+            foreach (Asterisks asterisk in asteriskList)
             {
-                if(asterisk.tls_enabled == 1)
+                if (asterisk.tls_enabled == 1)
                     updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "transport", "tls");
             }
             managerResponse = managerConnection.SendAction(updateSipConfig);
             if (!managerResponse.IsSuccess() && !rollbackState)
-            {
+            {              
                 throw new ManagerException(managerResponse.Message);
             }
         }
@@ -146,7 +144,7 @@ public abstract class AMIManager
             {
                 throw new ManagerException(managerResponse.Message);
             }
-        }      
+        }
     }
 
     protected void updateTLS(int newTLSstatus, string newCertDestination, string oldCertDestination, int oldTLSstatus, List<Asterisks> asteriskList)
@@ -157,20 +155,20 @@ public abstract class AMIManager
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlsenable", "tls");
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "globals", "tlscertfile", oldCertDestination);
             foreach (Asterisks asterisk in asteriskList)
-                {    
-                     if(asterisk.tls_enabled == 1)               
-                        updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "transport", "tls");
-                }                  
+            {
+                if (asterisk.tls_enabled == 1)
+                    updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, asterisk.name_Asterisk, "transport", "tls");
+            }
         }
         else if (oldTLSstatus == 1 && newTLSstatus == 0)
         {
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlsenable", "tls", "tls");
-            updateSipConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlscertfile", oldCertDestination, oldCertDestination);           
-                foreach (Asterisks asterisk in asteriskList)
-                {
-                    if (asterisk.tls_enabled == 1)
-                        updateSipConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, asterisk.name_Asterisk, "transport", "tls", "tls");
-                }        
+            updateSipConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "globals", "tlscertfile", oldCertDestination, oldCertDestination);
+            foreach (Asterisks asterisk in asteriskList)
+            {
+                if (asterisk.tls_enabled == 1)
+                    updateSipConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, asterisk.name_Asterisk, "transport", "tls", "tls");
+            }
         }
         else if (oldTLSstatus == 1 && newTLSstatus == 1)
         {
@@ -186,11 +184,11 @@ public abstract class AMIManager
     protected void updateTLS(Asterisks currentAsterisk, Asterisks updatedAsterisk, Asterisks originalAsterisk)
     {
         updateSipConfig = new UpdateConfigAction(SIP_CONFIG, SIP_CONFIG);
-        if(currentAsterisk.tls_enabled == 1 && updatedAsterisk.tls_enabled == 0 && originalAsterisk.tls_enabled == 1)
+        if (currentAsterisk.tls_enabled == 1 && updatedAsterisk.tls_enabled == 0 && originalAsterisk.tls_enabled == 1)
         {
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, updatedAsterisk.name_Asterisk, "transport", "tls", "tls");
         }
-        else if(currentAsterisk.tls_enabled == 1 && updatedAsterisk.tls_enabled == 1 && originalAsterisk.tls_enabled == 0)
+        else if (currentAsterisk.tls_enabled == 1 && updatedAsterisk.tls_enabled == 1 && originalAsterisk.tls_enabled == 0)
         {
             updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, updatedAsterisk.name_Asterisk, "transport", "tls", "tls");
         }
@@ -201,7 +199,7 @@ public abstract class AMIManager
         }
     }
 
-    protected void addPrefixContext(List<Asterisks> asteriskList)
+    protected void addContext(List<Asterisks> asteriskList)
     {
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
         foreach (Asterisks asterisk in asteriskList)
@@ -219,10 +217,25 @@ public abstract class AMIManager
         }
     }
 
+    protected void addContext(string contextName, string prefix)
+    {
+        string createdPrefix = Utils.createPrefix(prefix);
+        updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, contextName);
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",1,NoOp()");
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${EXTEN}@" + contextName + ")");
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,HangUp()");
+        managerResponse = managerConnection.SendAction(updateExtensionsConfig);
+        if (!managerResponse.IsSuccess() && !rollbackState)
+        {
+            throw new ManagerException(managerResponse.Message);
+        }
+    }
+
     protected void addInclude(string trunkName)
     {
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
-        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "remote", "include", trunkName);
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "trunksFromWebApp", "include", trunkName);
         managerResponse = managerConnection.SendAction(updateExtensionsConfig);
         if (!managerResponse.IsSuccess() && !rollbackState)
         {
@@ -233,25 +246,10 @@ public abstract class AMIManager
     protected void addInclude(List<Asterisks> asteriskList)
     {
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
-        foreach(Asterisks asterisk in asteriskList)
+        foreach (Asterisks asterisk in asteriskList)
         {
-            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "remote", "include", asterisk.name_Asterisk);
-        }       
-        managerResponse = managerConnection.SendAction(updateExtensionsConfig);
-        if (!managerResponse.IsSuccess() && !rollbackState)
-        {
-            throw new ManagerException(managerResponse.Message);
+            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "trunksFromWebApp", "include", asterisk.name_Asterisk);
         }
-    }
-
-    protected void addPrefixContext(string contextName, string prefix)
-    {
-        string createdPrefix = Utils.createPrefix(prefix);
-        updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
-        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, contextName);
-        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",1,NoOp()");
-        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,Dial(SIP/${EXTEN}@" + contextName + ")");
-        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, contextName, "exten", "_" + createdPrefix + ",n,HangUp()");       
         managerResponse = managerConnection.SendAction(updateExtensionsConfig);
         if (!managerResponse.IsSuccess() && !rollbackState)
         {
@@ -260,22 +258,30 @@ public abstract class AMIManager
     }
 
     protected void createInitialContexts(List<Asterisks> asteriskList)
-    {      
+    {
         managerResponse = managerConnection.SendAction(new GetConfigAction(EXTENSIONS_CONFIG));
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
         if (managerResponse.IsSuccess())
         {
-            GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;         
-            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, "remote");        
+            GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;
+            string createdPrefix = Utils.createPrefix(asteriskList.Last().prefix_Asterisk);
+            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, "trunksFromWebApp");
+            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "trunksFromWebApp", "exten", "_" + createdPrefix + ",1,NoOp()");
+            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "trunksFromWebApp", "exten", "_" + createdPrefix + ",n,Dial(SIP/${EXTEN})");
+            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "trunksFromWebApp", "exten", "_" + createdPrefix + ",n,HangUp()");
+            asteriskList.RemoveAt(asteriskList.Count-1);
             foreach (int key in responseConfig.Categories.Keys)
             {
                 string extensionsCategory = responseConfig.Categories[key];
-                updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "remote", "include", extensionsCategory);
-
-                if (!asteriskList.Contains(asteriskList.Find(asterisk => asterisk.name_Asterisk.Equals(extensionsCategory))))
+           
+                if (!asteriskList.Contains(asteriskList.Find(asterisk => asterisk.name_Asterisk.Equals(extensionsCategory))) && ! extensionsCategory.Equals("globals") && !extensionsCategory.Equals("general"))
                 {
-                    updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, extensionsCategory, "include", "remote");
+                    updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, extensionsCategory, "include", "trunksFromWebApp");
                 }
+            }
+            foreach(Asterisks asterisk in asteriskList)
+            {
+                updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "trunksFromWebApp", "include", asterisk.name_Asterisk);
             }
             managerResponse = managerConnection.SendAction(updateExtensionsConfig);
             if (!managerResponse.IsSuccess() && !rollbackState)
@@ -289,31 +295,27 @@ public abstract class AMIManager
         }
     }
 
-    protected void addToRemoteDialPlans(List<Asterisks> asteriskList)
+    protected void checkContexts(List<Asterisks> asteriskList)
     {
         managerResponse = managerConnection.SendAction(new GetConfigAction(EXTENSIONS_CONFIG));
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
         if (managerResponse.IsSuccess())
         {
             GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;
-            int remoteIndex = responseConfig.Categories.Values.ToList().IndexOf("remote");
+            int remoteIndex = responseConfig.Categories.Values.ToList().IndexOf("trunksFromWebApp");
             foreach (int key in responseConfig.Categories.Keys)
             {
                 string extensionsCategory = responseConfig.Categories[key];
-                if (!extensionsCategory.Equals("remote"))
-                {
-                    if (!responseConfig.Lines(remoteIndex).ContainsValue("include=" + extensionsCategory))
-                    {
-                        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, "remote", "include", extensionsCategory);
-                    }
+                if (!extensionsCategory.Equals("trunksFromWebApp"))
+                {                  
                     if (!asteriskList.Contains(asteriskList.Find(asterisk => asterisk.name_Asterisk.Equals(extensionsCategory))))
                     {
-                        if (!responseConfig.Lines(key).ContainsValue("include=remote"))
+                        if (!responseConfig.Lines(key).ContainsValue("include=trunksFromWebApp") && !extensionsCategory.Equals("globals") && !extensionsCategory.Equals("general"))
                         {
-                            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, extensionsCategory, "include", "remote");
+                            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, extensionsCategory, "include", "trunksFromWebApp");
                         }
                     }
-                }
+                }                
             }
             managerResponse = managerConnection.SendAction(updateExtensionsConfig);
             if (!managerResponse.IsSuccess() && !rollbackState)
@@ -327,18 +329,18 @@ public abstract class AMIManager
         }
     }
 
-    protected void deleteAllRemoteContexts(List<Asterisks> asteriskList)
+    protected void deleteInitialContexts(List<Asterisks> asteriskList)
     {
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
-        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, "remote");    
-        managerResponse = managerConnection.SendAction(new GetConfigAction(EXTENSIONS_CONFIG));       
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, "trunksFromWebApp");
+        managerResponse = managerConnection.SendAction(new GetConfigAction(EXTENSIONS_CONFIG));
         if (managerResponse.IsSuccess())
         {
             GetConfigResponse responseConfig = (GetConfigResponse)managerResponse;
             foreach (int key in responseConfig.Categories.Keys)
-            {                
+            {
                 string extensionsCategory = responseConfig.Categories[key];
-                if (extensionsCategory.Equals("remote"))
+                if (extensionsCategory.Equals("trunksFromWebApp") || extensionsCategory.Equals("globals") || extensionsCategory.Equals("general"))
                     continue;
                 if (asteriskList.Contains(asteriskList.Find(asterisk => asterisk.name_Asterisk.Equals(extensionsCategory))))
                 {
@@ -346,7 +348,7 @@ public abstract class AMIManager
                 }
                 else
                 {
-                    updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, extensionsCategory, "include", "remote", "remote");
+                    updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, extensionsCategory, "include", "trunksFromWebApp", "trunksFromWebApp");
                 }
             }
             managerResponse = managerConnection.SendAction(updateExtensionsConfig);
@@ -361,11 +363,11 @@ public abstract class AMIManager
         }
     }
 
-    protected void deleteOneContext(string deletedContext)
+    protected void deleteContext(string deletedContext)
     {
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
         updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, deletedContext);
-        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "remote", "include", deletedContext, deletedContext);
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELETE, "trunksFromWebApp", "include", deletedContext, deletedContext);
         managerResponse = managerConnection.SendAction(updateExtensionsConfig);
         if (!managerResponse.IsSuccess() && !rollbackState)
         {
@@ -373,13 +375,14 @@ public abstract class AMIManager
         }
     }
 
-    protected void deleteContexts(List<Asterisks> asteriskList)
+    protected void updateContext(string oldPrefix, string newPrefix)
     {
+        string createdOldPrefix = Utils.createPrefix(oldPrefix);
+        string createdNewPrefix = Utils.createPrefix(newPrefix);
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
-        foreach (Asterisks asterisk in asteriskList)
-        {
-            updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, asterisk.name_Asterisk);
-        }
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, "trunksFromWebApp", "exten", "_" + createdNewPrefix + ",1,NoOp()", "_" + createdOldPrefix + ",1,NoOp()");
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, "trunksFromWebApp", "exten", "_" + createdNewPrefix + ",n,Dial(SIP/${EXTEN})", "_" + createdOldPrefix + ",n,Dial(SIP/${EXTEN})");
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, "trunksFromWebApp", "exten", "_" + createdNewPrefix + ",n,HangUp()", "_" + createdOldPrefix + ",n,HangUp()");
         managerResponse = managerConnection.SendAction(updateExtensionsConfig);
         if (!managerResponse.IsSuccess() && !rollbackState)
         {
@@ -387,11 +390,11 @@ public abstract class AMIManager
         }
     }
 
-    protected void updateDialPlans(string oldContextName, string newContextName, string newPrefix)
+    protected void updateContext(string oldContextName, string newContextName, string newPrefix)
     {
         string createdPrefix = Utils.createPrefix(newPrefix);
         updateExtensionsConfig = new UpdateConfigAction(EXTENSIONS_CONFIG, EXTENSIONS_CONFIG);
-        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, "remote", "include", newContextName, oldContextName);
+        updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, "trunksFromWebApp", "include", newContextName, oldContextName);
         updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_DELCAT, oldContextName);
         updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_NEWCAT, newContextName);
         updateExtensionsConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, newContextName, "exten", "_" + createdPrefix + ",1,NoOp()");
@@ -415,7 +418,7 @@ public abstract class AMIManager
             if (item.StartsWith("context"))
             {
                 originalContext = items[1];
-                updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, userNumber, "context", "remote");
+                updateSipConfig.AddCommand(UpdateConfigAction.ACTION_APPEND, userNumber, "context", "trunksFromWebApp");
             }
             else
             {
@@ -488,7 +491,7 @@ public abstract class AMIManager
     protected void returnOriginalContext(string userName, string originalContext)
     {
         updateSipConfig = new UpdateConfigAction(SIP_CONFIG, SIP_CONFIG, true);
-        updateSipConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, userName, "context", originalContext, "remote");
+        updateSipConfig.AddCommand(UpdateConfigAction.ACTION_UPDATE, userName, "context", originalContext, "trunksFromWebApp");
         managerResponse = managerConnection.SendAction(updateSipConfig);
         if (!managerResponse.IsSuccess() && !rollbackState)
         {
@@ -520,7 +523,7 @@ public abstract class AMIManager
         else
         {
             throw new ManagerException(managerResponse.Message);
-        }           
+        }
     }
 
     protected List<string> getUsersByAsterisk(string asteriskName)

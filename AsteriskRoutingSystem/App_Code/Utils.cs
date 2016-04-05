@@ -12,7 +12,6 @@ using System.Web.UI.WebControls;
 /// </summary>
 public static class Utils
 {
-
     public static string EncryptAMIPassword(string clearText)
     {
         string EncryptionKey = "MAKV2SPBNI99212";

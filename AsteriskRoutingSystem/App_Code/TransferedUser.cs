@@ -7,7 +7,6 @@ using System.Web;
 /// Summary description for TranseferdUser
 /// </summary>
 /// 
-[Serializable]
 public class TransferedUser
 {
     public string name_user { get; set; }

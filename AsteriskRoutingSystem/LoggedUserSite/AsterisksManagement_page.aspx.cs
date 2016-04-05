@@ -17,7 +17,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
     #region Variable
 
     #endregion
-    #region helpFunction
+    #region helpFunctions
     protected void Page_Load(object sender, EventArgs e)
     {
         if (!IsPostBack)
@@ -26,12 +26,12 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
             Button_confirmDelete.Visible = false;
             Button_denyDelete.Visible = false;
             response_label.Visible = false;
-            Session["loggedUser"] = Membership.GetUser().UserName.ToString();          
+            Session["loggedUser"] = Membership.GetUser().UserName.ToString();
             TrunkManager.trunkManagerInstance.addAsteriskErrorEvent += new TrunkManager.addAsteriskErrorHandler(RollbackManager.rollbackManagerInstance.rollbackAddAsterisk);
             TrunkManager.trunkManagerInstance.updateAsteriskErrorEvent += new TrunkManager.updateAsteriskErrorHandler(RollbackManager.rollbackManagerInstance.rollbackUpdateAsterisk);
             TrunkManager.trunkManagerInstance.deleteAsteriskErrorEvent += new TrunkManager.deleteAsteriskErrorHandler(RollbackManager.rollbackManagerInstance.rollbackDeleteAsterisk);
             GridView_Asterisks.DataBind();
-        }        
+        }
     }
     protected void OnSelectedIndexChanged(object sender, EventArgs e)
     {
@@ -76,7 +76,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         if (Page.IsValid)
         {
             response_label.Text = string.Empty;
-            response_label.ForeColor = System.Drawing.Color.Green;           
+            response_label.ForeColor = System.Drawing.Color.Green;
 
             Asterisks createdAsterisk = new Asterisks();
             createdAsterisk.name_Asterisk = TextBox_name.Text;
@@ -102,7 +102,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
     {
         response_label.Text = string.Empty;
         response_label.ForeColor = System.Drawing.Color.Green;
-        
+
         int idAsterisk = int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString());
         int selectedRow = GridView_Asterisks.SelectedIndex;
         response_label.Text = TrunkManager.trunkManagerInstance.deleteTrunk(idAsterisk, false);
@@ -112,7 +112,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
             Label_deletePermanently.Visible = true;
             Button_confirmDelete.Visible = true;
             Button_denyDelete.Visible = true;
-        }      
+        }
         response_label.Visible = true;
         GridView_Asterisks.DataBind();
         closeEdit();
@@ -124,7 +124,7 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         if (Page.IsValid)
         {
             response_label.Text = string.Empty;
-            response_label.ForeColor = System.Drawing.Color.Green;            
+            response_label.ForeColor = System.Drawing.Color.Green;
 
             Asterisks updatedAsterisk = new Asterisks();
             updatedAsterisk.id_Asterisk = int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString());
@@ -159,8 +159,6 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         Button_denyDelete.Visible = false;
     }
 
-    #endregion
-
     protected void Button_confirmDelete_Click(object sender, EventArgs e)
     {
         int idAsterisk = int.Parse(GridView_Asterisks.DataKeys[GridView_Asterisks.SelectedIndex]["id_Asterisk"].ToString());
@@ -171,4 +169,5 @@ public partial class LoggedUserSite_AsterisksMnt_page : System.Web.UI.Page
         Button_confirmDelete.Visible = false;
         Button_denyDelete.Visible = false;
     }
+    #endregion
 }

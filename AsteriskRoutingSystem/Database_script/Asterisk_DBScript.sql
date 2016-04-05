@@ -21,7 +21,7 @@ original_asterisk nvarchar(20),
 current_asterisk nvarchar(20)
 )
 
-alter proc insertUniqueAsterisk
+create proc insertAsterisk
 @name_asterisk nvarchar(20),
 @prefix_Asterisk nvarchar(10),
 @ip_address nvarchar(20),
@@ -65,7 +65,7 @@ Begin
 	end
 End
 
-alter proc updateAsterisk
+create proc updateAsterisk
 @id_Asterisk int,
 @name_asterisk nvarchar(20),
 @prefix_Asterisk nvarchar(10),
@@ -88,28 +88,4 @@ Begin
 	end catch
 End
 
-select * from Asterisks
-delete from Asterisks where id_Asterisk = 63
-delete from Trunks
-drop table transferedUser
-select * from dbo.aspnet_Users
-delete from transferedUser
-select * from transferedUser
-
-update transferedUser set currentAsterisk = 'asterisk225' where transferedUser = '222221111'
-
-update Asterisks
-set name_asterisk = 'asterisk225'
-where id_Asterisk = 56
-
-select COUNT(name_Asterisk), COUNT(ip_address), COUNT(prefix_Asterisk) from Asterisks where name_Asterisk = 'asterisk214' or ip_address = '158.196.244.214' or prefix_Asterisk = '1'
-
-INSERT INTO Trunks(trunk_name, host_ip, context_name, id_Asterisk)
-values('trunk1', '1.1.1.1','context','1')
-
-select * from Asterisks where asterisk_owner = (select UserId from dbo.aspnet_Users where UserName = 'bud0019')
-
-INSERT INTO Asterisks(name_Asterisk, prefix_Asterisk, ip_address, login_AMI, password_AMI, asterisk_owner)
-                    values('asterisk223', '2', '158.196.244.223', 'asterisk214', 'asterisk214', (SELECT UserId FROM dbo.aspnet_Users WHERE UserName = 'bud0019'))
-SELECT * FROM sys.messages
-WHERE text like '%duplicate%' and text like '%key%' and language_id = 1033
+delete from Asterisks
